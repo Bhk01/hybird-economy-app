@@ -16,9 +16,13 @@ import {
   CheckCircle,
   ArrowRight,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  GraduationCap,
+  Plus,
+  X,
+  Calendar
 } from 'lucide-react';
-import { userApi } from '../utils/api';
+import { userApi, JobExperience, StudyExperience } from '../utils/api';
 
 interface ProfileOnboardingProps {
   userId: string;
@@ -32,8 +36,11 @@ interface OnboardingData {
   bio: string;
   location: string;
   skills: string[];
-  experience: string;
   currentSkill: string;
+  jobExperiences: JobExperience[];
+  currentJobExperience: Omit<JobExperience, 'id'>;
+  studyExperiences: StudyExperience[];
+  currentStudyExperience: Omit<StudyExperience, 'id'>;
 }
 
 export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onSkip }: ProfileOnboardingProps) {
@@ -45,8 +52,23 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
     bio: '',
     location: '',
     skills: [],
-    experience: '',
-    currentSkill: ''
+    currentSkill: '',
+    jobExperiences: [],
+    currentJobExperience: {
+      title: '',
+      company: '',
+      startDate: '',
+      endDate: null,
+      description: ''
+    },
+    studyExperiences: [],
+    currentStudyExperience: {
+      degree: '',
+      institution: '',
+      startDate: '',
+      endDate: null,
+      description: ''
+    }
   });
 
   const steps = [
@@ -75,10 +97,16 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
       icon: Star
     },
     {
-      id: 'experience',
-      title: t('onboarding.experienceTitle'),
-      description: t('onboarding.experienceDescription'),
+      id: 'jobExperience',
+      title: t('onboarding.jobExperienceTitle'),
+      description: t('onboarding.jobExperienceDescription'),
       icon: Briefcase
+    },
+    {
+      id: 'studyExperience',
+      title: t('onboarding.studyExperienceTitle'),
+      description: t('onboarding.studyExperienceDescription'),
+      icon: GraduationCap
     }
   ];
 
@@ -99,6 +127,46 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
       ...data,
       skills: data.skills.filter((_, i) => i !== index)
     });
+  };
+
+  const handleAddJobExperience = () => {
+    const { title, company, startDate } = data.currentJobExperience;
+    if (title && company && startDate) {
+      setData(prev => ({
+        ...prev,
+        jobExperiences: [...prev.jobExperiences, { ...prev.currentJobExperience, id: Date.now().toString() }],
+        currentJobExperience: { title: '', company: '', startDate: '', endDate: null, description: '' }
+      }));
+    } else {
+      toast.error(t('onboarding.jobExperienceRequiredFields'));
+    }
+  };
+
+  const handleRemoveJobExperience = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      jobExperiences: prev.jobExperiences.filter(exp => exp.id !== id)
+    }));
+  };
+
+  const handleAddStudyExperience = () => {
+    const { degree, institution, startDate } = data.currentStudyExperience;
+    if (degree && institution && startDate) {
+      setData(prev => ({
+        ...prev,
+        studyExperiences: [...prev.studyExperiences, { ...prev.currentStudyExperience, id: Date.now().toString() }],
+        currentStudyExperience: { degree: '', institution: '', startDate: '', endDate: null, description: '' }
+      }));
+    } else {
+      toast.error(t('onboarding.studyExperienceRequiredFields'));
+    }
+  };
+
+  const handleRemoveStudyExperience = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      studyExperiences: prev.studyExperiences.filter(exp => exp.id !== id)
+    }));
   };
 
   const handleNext = () => {
@@ -123,6 +191,8 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
         bio: data.bio,
         location: data.location,
         skills: data.skills,
+        jobExperiences: data.jobExperiences,
+        studyExperiences: data.studyExperiences,
         onboardingCompleted: true,
         profileCompleteness: calculateCompleteness()
       });
@@ -139,10 +209,12 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
 
   const calculateCompleteness = () => {
     let score = 20; // Base score for registration
-    if (data.bio.length > 50) score += 25;
-    if (data.location) score += 15;
-    if (data.skills.length >= 3) score += 25;
-    if (data.experience) score += 15;
+    if (data.bio.length > 50) score += 15;
+    if (data.location) score += 10;
+    if (data.skills.length >= 3) score += 20;
+    if (data.jobExperiences.length > 0) score += 15;
+    if (data.studyExperiences.length > 0) score += 10;
+    if (data.bio.length > 100 && data.skills.length >= 5 && data.jobExperiences.length > 1 && data.studyExperiences.length > 0) score += 10; // Bonus for detailed profile
     return Math.min(score, 100);
   };
 
@@ -264,7 +336,7 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
                         onClick={() => handleRemoveSkill(index)}
                         className="ml-1 hover:text-destructive"
                       >
-                        ×
+                        <X className="h-3 w-3" />
                       </button>
                     </Badge>
                   ))}
@@ -278,25 +350,170 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
           </div>
         );
 
-      case 'experience':
+      case 'jobExperience':
         return (
           <div className="space-y-6">
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
               <Icon className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-4">
-              <Label htmlFor="experience">{t('onboarding.shareExperience')}</Label>
-              <Textarea
-                id="experience"
-                placeholder={t('onboarding.experiencePlaceholder')}
-                value={data.experience}
-                onChange={(e) => setData({ ...data, experience: e.target.value })}
-                rows={5}
-                className="resize-none"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('onboarding.experienceHelp')}
-              </p>
+              <Label>{t('onboarding.jobExperienceTitle')}</Label>
+              <p className="text-sm text-muted-foreground mb-4">{t('onboarding.jobExperienceDescription')}</p>
+
+              {data.jobExperiences.map((exp, index) => (
+                <Card key={exp.id} className="mb-2">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{exp.title} at {exp.company}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {exp.startDate} - {exp.endDate || t('onboarding.current')}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveJobExperience(exp.id)}>
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Card className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm">{t('onboarding.addJobExperience')}</h4>
+                <div>
+                  <Label htmlFor="job-title">{t('onboarding.jobTitle')}</Label>
+                  <Input
+                    id="job-title"
+                    placeholder={t('onboarding.jobTitlePlaceholder')}
+                    value={data.currentJobExperience.title}
+                    onChange={(e) => setData(prev => ({ ...prev, currentJobExperience: { ...prev.currentJobExperience, title: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="company">{t('onboarding.company')}</Label>
+                  <Input
+                    id="company"
+                    placeholder={t('onboarding.companyPlaceholder')}
+                    value={data.currentJobExperience.company}
+                    onChange={(e) => setData(prev => ({ ...prev, currentJobExperience: { ...prev.currentJobExperience, company: e.target.value } }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="job-start-date">{t('onboarding.startDate')}</Label>
+                    <Input
+                      id="job-start-date"
+                      type="date"
+                      value={data.currentJobExperience.startDate}
+                      onChange={(e) => setData(prev => ({ ...prev, currentJobExperience: { ...prev.currentJobExperience, startDate: e.target.value } }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="job-end-date">{t('onboarding.endDate')} ({t('onboarding.optional')})</Label>
+                    <Input
+                      id="job-end-date"
+                      type="date"
+                      value={data.currentJobExperience.endDate || ''}
+                      onChange={(e) => setData(prev => ({ ...prev, currentJobExperience: { ...prev.currentJobExperience, endDate: e.target.value || null } }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="job-description">{t('onboarding.description')} ({t('onboarding.optional')})</Label>
+                  <Textarea
+                    id="job-description"
+                    placeholder={t('onboarding.jobDescriptionPlaceholder')}
+                    value={data.currentJobExperience.description}
+                    onChange={(e) => setData(prev => ({ ...prev, currentJobExperience: { ...prev.currentJobExperience, description: e.target.value } }))}
+                    rows={3}
+                  />
+                </div>
+                <Button type="button" onClick={handleAddJobExperience} className="w-full gap-2">
+                  <Plus className="h-4 w-4" /> {t('onboarding.addExperience')}
+                </Button>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'studyExperience':
+        return (
+          <div className="space-y-6">
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+              <Icon className="h-8 w-8 text-primary" />
+            </div>
+            <div className="space-y-4">
+              <Label>{t('onboarding.studyExperienceTitle')}</Label>
+              <p className="text-sm text-muted-foreground mb-4">{t('onboarding.studyExperienceDescription')}</p>
+
+              {data.studyExperiences.map((exp, index) => (
+                <Card key={exp.id} className="mb-2">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{exp.degree} at {exp.institution}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {exp.startDate} - {exp.endDate || t('onboarding.current')}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveStudyExperience(exp.id)}>
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Card className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm">{t('onboarding.addStudyExperience')}</h4>
+                <div>
+                  <Label htmlFor="degree">{t('onboarding.degree')}</Label>
+                  <Input
+                    id="degree"
+                    placeholder={t('onboarding.degreePlaceholder')}
+                    value={data.currentStudyExperience.degree}
+                    onChange={(e) => setData(prev => ({ ...prev, currentStudyExperience: { ...prev.currentStudyExperience, degree: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="institution">{t('onboarding.institution')}</Label>
+                  <Input
+                    id="institution"
+                    placeholder={t('onboarding.institutionPlaceholder')}
+                    value={data.currentStudyExperience.institution}
+                    onChange={(e) => setData(prev => ({ ...prev, currentStudyExperience: { ...prev.currentStudyExperience, institution: e.target.value } }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="study-start-date">{t('onboarding.startDate')}</Label>
+                    <Input
+                      id="study-start-date"
+                      type="date"
+                      value={data.currentStudyExperience.startDate}
+                      onChange={(e) => setData(prev => ({ ...prev, currentStudyExperience: { ...prev.currentStudyExperience, startDate: e.target.value } }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="study-end-date">{t('onboarding.endDate')} ({t('onboarding.optional')})</Label>
+                    <Input
+                      id="study-end-date"
+                      type="date"
+                      value={data.currentStudyExperience.endDate || ''}
+                      onChange={(e) => setData(prev => ({ ...prev, currentStudyExperience: { ...prev.currentStudyExperience, endDate: e.target.value || null } }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="study-description">{t('onboarding.description')} ({t('onboarding.optional')})</Label>
+                  <Textarea
+                    id="study-description"
+                    placeholder={t('onboarding.studyDescriptionPlaceholder')}
+                    value={data.currentStudyExperience.description}
+                    onChange={(e) => setData(prev => ({ ...prev, currentStudyExperience: { ...prev.currentStudyExperience, description: e.target.value } }))}
+                    rows={3}
+                  />
+                </div>
+                <Button type="button" onClick={handleAddStudyExperience} className="w-full gap-2">
+                  <Plus className="h-4 w-4" /> {t('onboarding.addEducation')}
+                </Button>
+              </Card>
             </div>
           </div>
         );
@@ -350,17 +567,17 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
             >
               {isLoading ? (
                 <>
-                  <span className="mr-2">Saving...</span>
+                  <span className="mr-2">{t('common.saving')}</span>
                   <span className="animate-spin">⏳</span>
                 </>
               ) : currentStep === steps.length - 1 ? (
                 <>
-                  Finish
+                  {t('common.finish')}
                   <CheckCircle className="ml-2 h-4 w-4" />
                 </>
               ) : (
                 <>
-                  Next
+                  {t('common.next')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

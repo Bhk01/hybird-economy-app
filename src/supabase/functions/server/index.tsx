@@ -137,7 +137,11 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
       completedJobs: 0,
       totalEarnings: 0,
       createdAt: getCurrentTimestamp(),
-      updatedAt: getCurrentTimestamp()
+      updatedAt: getCurrentTimestamp(),
+      onboardingCompleted: false,
+      profileCompleteness: 0,
+      jobExperiences: [],
+      studyExperiences: []
     };
 
     await kv.set(`user:${userId}`, profile);
@@ -228,11 +232,11 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
 
 // ==================== USER MANAGEMENT ====================
 
-// Create or update user profile
-app.post("/make-server-478a5c23/users/profile", async (c) => {
+// Create or update user profile (POST for initial creation, PUT for updates)
+app.post("/make-server-478a5c22/users/profile", async (c) => {
   try {
     const body = await c.req.json();
-    const { userId, name, email, bio, skills, avatar, location } = body;
+    const { userId, name, email, bio, skills, avatar, location, onboardingCompleted, profileCompleteness, jobExperiences, studyExperiences } = body;
 
     if (!userId || !name || !email) {
       return c.json({ error: "Missing required fields: userId, name, email" }, 400);
@@ -245,15 +249,19 @@ app.post("/make-server-478a5c23/users/profile", async (c) => {
       id: userId,
       name,
       email,
-      bio: bio || "",
-      skills: skills || [],
-      avatar: avatar || "",
-      location: location || "",
+      bio: bio || existingProfile?.bio || "",
+      skills: skills || existingProfile?.skills || [],
+      avatar: avatar || existingProfile?.avatar || "",
+      location: location || existingProfile?.location || "",
       rating: existingProfile?.rating || 0,
       completedJobs: existingProfile?.completedJobs || 0,
       totalEarnings: existingProfile?.totalEarnings || 0,
       createdAt: existingProfile?.createdAt || getCurrentTimestamp(),
-      updatedAt: getCurrentTimestamp()
+      updatedAt: getCurrentTimestamp(),
+      onboardingCompleted: onboardingCompleted ?? existingProfile?.onboardingCompleted ?? false,
+      profileCompleteness: profileCompleteness ?? existingProfile?.profileCompleteness ?? 0,
+      jobExperiences: jobExperiences || existingProfile?.jobExperiences || [],
+      studyExperiences: studyExperiences || existingProfile?.studyExperiences || []
     };
 
     await kv.set(`user:${userId}`, profile);
@@ -280,6 +288,33 @@ app.get("/make-server-478a5c23/users/:userId", async (c) => {
   } catch (error) {
     console.log(`Error fetching user profile: ${error}`);
     return c.json({ error: "Failed to fetch profile" }, 500);
+  }
+});
+
+// Update user profile (PUT request)
+app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
+  try {
+    const userId = c.req.param("userId");
+    const body = await c.req.json();
+
+    const existingProfile = await kv.get(`user:${userId}`);
+    if (!existingProfile) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    const updatedProfile = {
+      ...existingProfile,
+      ...body, // Merge incoming data
+      updatedAt: getCurrentTimestamp()
+    };
+
+    await kv.set(`user:${userId}`, updatedProfile);
+    console.log(`Updated profile for user: ${userId}`);
+    
+    return c.json({ success: true, profile: updatedProfile });
+  } catch (error) {
+    console.log(`Error updating user profile: ${error}`);
+    return c.json({ error: "Failed to update profile" }, 500);
   }
 });
 

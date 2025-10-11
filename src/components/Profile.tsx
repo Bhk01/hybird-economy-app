@@ -33,17 +33,20 @@ import {
   ExternalLink,
   Loader2,
   AlertCircle,
-  Check
+  Check,
+  Briefcase,
+  GraduationCap
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { useI18n } from '../utils/i18n';
+import { userApi } from '../utils/api';
 
 interface ProfileProps {
   onNavigate: (page: PageType) => void;
 }
 
 export function Profile({ onNavigate }: ProfileProps) {
-  const { user, wallet } = useUser();
+  const { user, wallet, setUser } = useUser();
   const { t } = useI18n();
   const handleLogout = () => {
     onNavigate('landing');
@@ -64,7 +67,10 @@ export function Profile({ onNavigate }: ProfileProps) {
     email: '',
     phone: '',
     location: '',
-    avatar: ''
+    avatar: '',
+    skills: [] as string[],
+    jobExperiences: [] as { id: string; title: string; company: string; startDate: string; endDate: string | null; description: string }[],
+    studyExperiences: [] as { id: string; degree: string; institution: string; startDate: string; endDate: string | null; description: string }[],
   });
   
   const [originalData, setOriginalData] = useState({ ...editedData });
@@ -77,9 +83,12 @@ export function Profile({ onNavigate }: ProfileProps) {
         username: user.email?.split('@')[0] || 'user',
         bio: user.bio || 'Welcome to Work & Invest! I\'m excited to collaborate with talented professionals.',
         email: user.email || '',
-        phone: '+216 XX XXX XXX',
+        phone: '+216 XX XXX XXX', // Placeholder, as phone is not in UserProfile
         location: user.location || 'Tunisia',
-        avatar: user.avatar || ''
+        avatar: user.avatar || '',
+        skills: user.skills || [],
+        jobExperiences: user.jobExperiences || [],
+        studyExperiences: user.studyExperiences || [],
       };
       setEditedData(initialData);
       setOriginalData(initialData);
@@ -141,9 +150,9 @@ export function Profile({ onNavigate }: ProfileProps) {
     }
   }, [editedData.username]);
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (editedData.bio.length > BIO_LIMIT) {
-      toast.error(`Bio must be less than ${BIO_LIMIT} characters`);
+      toast.error(t('profile.bioTooLong', { limit: BIO_LIMIT }));
       return;
     }
 
@@ -152,11 +161,27 @@ export function Profile({ onNavigate }: ProfileProps) {
       return;
     }
 
-    // Save changes
-    setOriginalData({ ...editedData });
-    setHasUnsavedChanges(false);
-    setIsEditing(false);
-    toast.success(t('profile.saveChanges') + ' ✓');
+    try {
+      const updatedProfile = await userApi.updateProfile(user!.id, {
+        name: editedData.name,
+        // username: editedData.username, // Username update logic would be more complex in a real app
+        bio: editedData.bio,
+        // email: editedData.email, // Email update usually requires re-verification
+        // location: editedData.location,
+        // avatar: editedData.avatar,
+        skills: editedData.skills,
+        jobExperiences: editedData.jobExperiences,
+        studyExperiences: editedData.studyExperiences,
+      });
+      setUser(updatedProfile.profile); // Update user context
+      setOriginalData({ ...editedData });
+      setHasUnsavedChanges(false);
+      setIsEditing(false);
+      toast.success(t('profile.saveChangesSuccess'));
+    } catch (error) {
+      console.error('Failed to save profile changes:', error);
+      toast.error(t('profile.saveChangesError'));
+    }
   };
 
   const handleCancelEditing = () => {
@@ -201,14 +226,14 @@ export function Profile({ onNavigate }: ProfileProps) {
   };
 
   // Map user skills to profile skills with default category and level
-  const skills = user?.skills && user.skills.length > 0 
-    ? user.skills.map(skill => ({
+  const skills = editedData.skills && editedData.skills.length > 0 
+    ? editedData.skills.map(skill => ({
         name: skill,
-        level: 75,
+        level: 75, // Placeholder level
         category: 'Skills'
       }))
     : [
-        { name: 'Add your skills', level: 0, category: 'Getting Started' }
+        { name: t('profile.addYourSkills'), level: 0, category: 'Getting Started' }
       ];
 
   const services = [
@@ -481,6 +506,82 @@ export function Profile({ onNavigate }: ProfileProps) {
                         <Progress value={skill.level} className="h-2" />
                       </div>
                     ))}
+                  </CardContent>
+                </Card>
+
+                {/* Job Experiences */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>{t('profile.jobExperienceTitle')}</CardTitle>
+                      {isEditing && (
+                        <Button size="sm" variant="outline" className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          {t('profile.addExperience')}
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {editedData.jobExperiences.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">{t('profile.noJobExperience')}</p>
+                    ) : (
+                      editedData.jobExperiences.map((exp) => (
+                        <div key={exp.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                          <Briefcase className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium">{exp.title} at {exp.company}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {exp.startDate} - {exp.endDate || t('onboarding.current')}
+                            </p>
+                            {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
+                          </div>
+                          {isEditing && (
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Study Experiences */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>{t('profile.studyExperienceTitle')}</CardTitle>
+                      {isEditing && (
+                        <Button size="sm" variant="outline" className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          {t('profile.addEducation')}
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {editedData.studyExperiences.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">{t('profile.noStudyExperience')}</p>
+                    ) : (
+                      editedData.studyExperiences.map((exp) => (
+                        <div key={exp.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                          <GraduationCap className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium">{exp.degree} at {exp.institution}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {exp.startDate} - {exp.endDate || t('onboarding.current')}
+                            </p>
+                            {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
+                          </div>
+                          {isEditing && (
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </CardContent>
                 </Card>
 

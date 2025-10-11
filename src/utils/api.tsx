@@ -53,6 +53,24 @@ async function apiRequest<T = any>(
 
 // ==================== USER API ====================
 
+export interface JobExperience {
+  id: string;
+  title: string;
+  company: string;
+  startDate: string;
+  endDate: string | null; // null if current
+  description: string;
+}
+
+export interface StudyExperience {
+  id: string;
+  degree: string;
+  institution: string;
+  startDate: string;
+  endDate: string | null; // null if current
+  description: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -66,6 +84,10 @@ export interface UserProfile {
   totalEarnings: number;
   createdAt: string;
   updatedAt: string;
+  onboardingCompleted?: boolean;
+  profileCompleteness?: number;
+  jobExperiences?: JobExperience[];
+  studyExperiences?: StudyExperience[];
 }
 
 export const userApi = {
@@ -74,6 +96,9 @@ export const userApi = {
   
   getProfile: (userId: string) =>
     apiRequest<{ profile: UserProfile }>(`/users/${userId}`),
+
+  updateProfile: (userId: string, profileData: Partial<UserProfile>) =>
+    apiRequest<{ profile: UserProfile }>(`/users/${userId}/profile`, 'PUT', profileData),
 };
 
 // ==================== WALLET API ====================

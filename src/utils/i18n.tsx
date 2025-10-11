@@ -108,8 +108,10 @@ const translations: Record<Language, TranslationData> = {
       locationDescription: 'Help others find you',
       skillsTitle: 'What are your skills?',
       skillsDescription: 'Add your top skills',
-      experienceTitle: 'Your experience',
-      experienceDescription: 'Share your background',
+      jobExperienceTitle: 'Your Job Experience',
+      jobExperienceDescription: 'Tell us about your professional background',
+      studyExperienceTitle: 'Your Study Experience',
+      studyExperienceDescription: 'Share your educational background',
       welcome: 'Welcome',
       letsSetup: 'Let\'s set up your profile to help you get the most out of Work & Invest',
       benefit1: 'Get matched with the right opportunities',
@@ -124,9 +126,27 @@ const translations: Record<Language, TranslationData> = {
       addSkills: 'Add your skills (minimum 3 recommended)',
       skillsPlaceholder: 'e.g., Web Development, Design, Marketing',
       skillsAdded: 'skills added',
-      shareExperience: 'Share your experience (optional)',
-      experiencePlaceholder: 'Current position, previous roles, education, certifications...',
-      experienceHelp: 'This helps others understand your background',
+      jobExperienceRequiredFields: 'Please fill in job title, company, and start date.',
+      studyExperienceRequiredFields: 'Please fill in degree, institution, and start date.',
+      addJobExperience: 'Add Job Experience',
+      addStudyExperience: 'Add Education',
+      jobTitle: 'Job Title',
+      jobTitlePlaceholder: 'e.g., Software Engineer',
+      company: 'Company',
+      companyPlaceholder: 'e.g., Tech Solutions Inc.',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      optional: 'Optional',
+      description: 'Description',
+      jobDescriptionPlaceholder: 'Responsibilities, achievements, etc.',
+      degree: 'Degree/Field of Study',
+      degreePlaceholder: 'e.g., Bachelor of Computer Science',
+      institution: 'Institution',
+      institutionPlaceholder: 'e.g., University of Tunis',
+      studyDescriptionPlaceholder: 'Courses, projects, honors, etc.',
+      current: 'Current',
+      addExperience: 'Add Experience',
+      addEducation: 'Add Education',
       step: 'Step',
       of: 'of',
       complete: 'complete',
@@ -323,7 +343,17 @@ const translations: Record<Language, TranslationData> = {
       location: 'Location',
       skills: 'Skills',
       addSkill: 'Add Skill',
-      removeSkill: 'Remove Skill'
+      removeSkill: 'Remove Skill',
+      bioTooLong: 'Bio must be less than {{limit}} characters',
+      saveChangesSuccess: 'Profile changes saved successfully!',
+      saveChangesError: 'Failed to save profile changes.',
+      addYourSkills: 'Add your skills',
+      jobExperienceTitle: 'Job Experience',
+      studyExperienceTitle: 'Study Experience',
+      addExperience: 'Add Experience',
+      addEducation: 'Add Education',
+      noJobExperience: 'No job experiences added yet.',
+      noStudyExperience: 'No study experiences added yet.'
     },
     // Wallet
     wallet: {
@@ -384,8 +414,10 @@ const translations: Record<Language, TranslationData> = {
       locationDescription: 'ساعد الآخرين في العثور عليك',
       skillsTitle: 'ما هي مهاراتك؟',
       skillsDescription: 'أضف أهم مهاراتك',
-      experienceTitle: 'خبرتك',
-      experienceDescription: 'شارك خلفيتك',
+      jobExperienceTitle: 'خبرتك المهنية',
+      jobExperienceDescription: 'أخبرنا عن خلفيتك المهنية',
+      studyExperienceTitle: 'خبرتك الدراسية',
+      studyExperienceDescription: 'شارك خلفيتك التعليمية',
       welcome: 'مرحباً',
       letsSetup: 'لنقم بإعداد ملفك الشخصي لمساعدتك في الاستفادة القصوى من Work & Invest',
       benefit1: 'احصل على مطابقة مع الفرص المناسبة',
@@ -400,9 +432,27 @@ const translations: Record<Language, TranslationData> = {
       addSkills: 'أضف مهاراتك (يوصى بـ 3 على الأقل)',
       skillsPlaceholder: 'مثال: تطوير الويب، التصميم، التسويق',
       skillsAdded: 'مهارات مضافة',
-      shareExperience: 'شارك خبرتك (اختياري)',
-      experiencePlaceholder: 'المنصب الحالي، الأدوار السابقة، التعليم، الشهادات...',
-      experienceHelp: 'هذا يساعد الآخرين في فهم خلفيتك',
+      jobExperienceRequiredFields: 'يرجى ملء المسمى الوظيفي والشركة وتاريخ البدء.',
+      studyExperienceRequiredFields: 'يرجى ملء الدرجة العلمية والمؤسسة وتاريخ البدء.',
+      addJobExperience: 'إضافة خبرة عمل',
+      addStudyExperience: 'إضافة تعليم',
+      jobTitle: 'المسمى الوظيفي',
+      jobTitlePlaceholder: 'مثال: مهندس برمجيات',
+      company: 'الشركة',
+      companyPlaceholder: 'مثال: شركة حلول تقنية',
+      startDate: 'تاريخ البدء',
+      endDate: 'تاريخ الانتهاء',
+      optional: 'اختياري',
+      description: 'الوصف',
+      jobDescriptionPlaceholder: 'المسؤوليات، الإنجازات، إلخ.',
+      degree: 'الدرجة العلمية/مجال الدراسة',
+      degreePlaceholder: 'مثال: بكالوريوس علوم الحاسوب',
+      institution: 'المؤسسة التعليمية',
+      institutionPlaceholder: 'مثال: جامعة تونس',
+      studyDescriptionPlaceholder: 'الدورات، المشاريع، التكريمات، إلخ.',
+      current: 'حالي',
+      addExperience: 'إضافة خبرة',
+      addEducation: 'إضافة تعليم',
       step: 'خطوة',
       of: 'من',
       complete: 'مكتمل',
@@ -670,7 +720,17 @@ const translations: Record<Language, TranslationData> = {
       location: 'الموقع',
       skills: 'المهارات',
       addSkill: 'إضافة مهارة',
-      removeSkill: 'إزالة مهارة'
+      removeSkill: 'إزالة مهارة',
+      bioTooLong: 'يجب أن تكون السيرة الذاتية أقل من {{limit}} حرفًا',
+      saveChangesSuccess: 'تم حفظ تغييرات الملف الشخصي بنجاح!',
+      saveChangesError: 'فشل حفظ تغييرات الملف الشخصي.',
+      addYourSkills: 'أضف مهاراتك',
+      jobExperienceTitle: 'الخبرة المهنية',
+      studyExperienceTitle: 'الخبرة الدراسية',
+      addExperience: 'إضافة خبرة',
+      addEducation: 'إضافة تعليم',
+      noJobExperience: 'لم يتم إضافة أي خبرات عمل بعد.',
+      noStudyExperience: 'لم يتم إضافة أي خبرات دراسية بعد.'
     },
     // Wallet
     wallet: {
@@ -760,8 +820,10 @@ const translations: Record<Language, TranslationData> = {
       locationDescription: 'Aidez les autres à vous trouver',
       skillsTitle: 'Quelles sont vos compétences?',
       skillsDescription: 'Ajoutez vos principales compétences',
-      experienceTitle: 'Votre expérience',
-      experienceDescription: 'Partagez votre parcours',
+      jobExperienceTitle: 'Votre Expérience Professionnelle',
+      jobExperienceDescription: 'Parlez-nous de votre parcours professionnel',
+      studyExperienceTitle: 'Votre Expérience Scolaire',
+      studyExperienceDescription: 'Partagez votre parcours éducatif',
       welcome: 'Bienvenue',
       letsSetup: 'Configurons votre profil pour vous aider à tirer le meilleur parti de Work & Invest',
       benefit1: 'Soyez jumelé avec les bonnes opportunités',
@@ -776,9 +838,27 @@ const translations: Record<Language, TranslationData> = {
       addSkills: 'Ajoutez vos compétences (minimum 3 recommandées)',
       skillsPlaceholder: 'ex: Développement Web, Design, Marketing',
       skillsAdded: 'compétences ajoutées',
-      shareExperience: 'Partagez votre expérience (optionnel)',
-      experiencePlaceholder: 'Poste actuel, rôles précédents, études, certifications...',
-      experienceHelp: 'Cela aide les autres à comprendre votre parcours',
+      jobExperienceRequiredFields: 'Veuillez remplir le titre du poste, l\'entreprise et la date de début.',
+      studyExperienceRequiredFields: 'Veuillez remplir le diplôme, l\'établissement et la date de début.',
+      addJobExperience: 'Ajouter une expérience professionnelle',
+      addStudyExperience: 'Ajouter une formation',
+      jobTitle: 'Titre du poste',
+      jobTitlePlaceholder: 'ex: Ingénieur Logiciel',
+      company: 'Entreprise',
+      companyPlaceholder: 'ex: Tech Solutions Inc.',
+      startDate: 'Date de début',
+      endDate: 'Date de fin',
+      optional: 'Optionnel',
+      description: 'Description',
+      jobDescriptionPlaceholder: 'Responsabilités, réalisations, etc.',
+      degree: 'Diplôme/Domaine d\'études',
+      degreePlaceholder: 'ex: Licence en Informatique',
+      institution: 'Établissement',
+      institutionPlaceholder: 'ex: Université de Tunis',
+      studyDescriptionPlaceholder: 'Cours, projets, distinctions, etc.',
+      current: 'Actuel',
+      addExperience: 'Ajouter une expérience',
+      addEducation: 'Ajouter une formation',
       step: 'Étape',
       of: 'de',
       complete: 'terminé',
@@ -1046,7 +1126,17 @@ const translations: Record<Language, TranslationData> = {
       location: 'Emplacement',
       skills: 'Compétences',
       addSkill: 'Ajouter une compétence',
-      removeSkill: 'Supprimer la compétence'
+      removeSkill: 'Supprimer la compétence',
+      bioTooLong: 'La biographie doit contenir moins de {{limit}} caractères',
+      saveChangesSuccess: 'Modifications du profil enregistrées avec succès!',
+      saveChangesError: 'Échec de l\'enregistrement des modifications du profil.',
+      addYourSkills: 'Ajoutez vos compétences',
+      jobExperienceTitle: 'Expérience Professionnelle',
+      studyExperienceTitle: 'Expérience Scolaire',
+      addExperience: 'Ajouter une expérience',
+      addEducation: 'Ajouter une formation',
+      noJobExperience: 'Aucune expérience professionnelle ajoutée pour le moment.',
+      noStudyExperience: 'Aucune expérience scolaire ajoutée pour le moment.'
     },
     // Wallet
     wallet: {
@@ -1087,7 +1177,7 @@ const translations: Record<Language, TranslationData> = {
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: { [key: string]: string | number }) => string;
   dir: 'ltr' | 'rtl';
 }
 
@@ -1101,7 +1191,7 @@ export const useI18n = () => {
   return context;
 };
 
-const getNestedTranslation = (obj: TranslationData, path: string): string => {
+const getNestedTranslation = (obj: TranslationData, path: string, options?: { [key: string]: string | number }): string => {
   const keys = path.split('.');
   let current: any = obj;
   
@@ -1113,7 +1203,16 @@ const getNestedTranslation = (obj: TranslationData, path: string): string => {
     }
   }
   
-  return typeof current === 'string' ? current : path;
+  let translatedString = typeof current === 'string' ? current : path;
+
+  // Replace placeholders if options are provided
+  if (options) {
+    for (const [key, value] of Object.entries(options)) {
+      translatedString = translatedString.replace(`{{${key}}}`, String(value));
+    }
+  }
+
+  return translatedString;
 };
 
 interface I18nProviderProps {
@@ -1126,8 +1225,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
     return saved || 'en';
   });
 
-  const t = (key: string): string => {
-    return getNestedTranslation(translations[language], key);
+  const t = (key: string, options?: { [key: string]: string | number }): string => {
+    return getNestedTranslation(translations[language], key, options);
   };
 
   const handleSetLanguage = (lang: Language) => {

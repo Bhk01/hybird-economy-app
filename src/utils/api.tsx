@@ -1,6 +1,7 @@
 import { projectId, publicAnonKey } from './supabase/info';
 
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-478a5c23`;
+// Use environment variable for API_BASE_URL, fallback to Supabase URL if not set
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `https://${projectId}.supabase.co/functions/v1/make-server-478a5c23`;
 
 interface ApiResponse<T = any> {
   success?: boolean; // Added success property
@@ -181,7 +182,7 @@ export const jobsApi = {
     apiRequest<{ job: Job }>(`/jobs/${jobId}/apply`, 'POST', applicationData),
 };
 
-// ==================== SKILLS API ====================
+// ==================== SKILL SWAP API ====================
 
 export interface SkillOffering {
   id: string;

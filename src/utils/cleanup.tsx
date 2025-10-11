@@ -1,6 +1,5 @@
-import { projectId, publicAnonKey } from './supabase/info';
-
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-478a5c23`;
+import { API_BASE_URL } from './api'; // Import API_BASE_URL from api.tsx
+import { publicAnonKey } from './supabase/info';
 
 /**
  * Cleanup utility to reset the database

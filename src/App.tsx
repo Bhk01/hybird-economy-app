@@ -1,0 +1,248 @@
+import React, { useState, createContext, useContext, useEffect } from 'react';
+import { LandingPage } from './components/LandingPage';
+import { AuthForm } from './components/AuthForm';
+import { ProfileOnboarding } from './components/ProfileOnboarding';
+import { Dashboard } from './components/Dashboard';
+import { HireMode } from './components/HireMode';
+import { SkillSwapMode } from './components/SkillSwapMode';
+import { InvestmentMode } from './components/InvestmentMode';
+import { Profile } from './components/Profile';
+import { WalletSimple as Wallet } from './components/WalletSimple';
+import { Settings } from './components/Settings';
+import { Toaster } from './components/ui/sonner';
+import { UserProfile, Wallet as WalletType, userApi, walletApi } from './utils/api';
+import { I18nProvider } from './utils/i18n';
+import { ThemeProvider } from './utils/theme';
+import './utils/cleanup'; // Import cleanup utility for console access
+
+export type PageType = 'landing' | 'auth' | 'dashboard' | 'hire' | 'skillswap' | 'investment' | 'profile' | 'wallet' | 'settings';
+
+// User Context
+interface UserContextType {
+  user: UserProfile | null;
+  wallet: WalletType | null;
+  setUser: (user: UserProfile | null) => void;
+  setWallet: (wallet: WalletType | null) => void;
+  refreshWallet: () => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
+
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<PageType>('landing');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [newUserData, setNewUserData] = useState<{ userId: string; name: string; email: string } | null>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  const refreshWallet = async () => {
+    if (user) {
+      try {
+        const response = await walletApi.getWallet(user.id);
+        setWallet(response.wallet);
+      } catch (error) {
+        console.error('Failed to refresh wallet:', error);
+      }
+    }
+  };
+
+  const handleAuthSuccess = async (userData: { userId: string; name: string; email: string }, isNewUser: boolean = false) => {
+    console.log('Authentication successful, loading user data...', { isNewUser });
+    
+    // If new user, show onboarding
+    if (isNewUser) {
+      setNewUserData(userData);
+      setShowOnboarding(true);
+      return;
+    }
+    
+    try {
+      // Get or create user profile
+      let userProfile: UserProfile;
+      
+      try {
+        const getResponse = await userApi.getProfile(userData.userId);
+        userProfile = getResponse.profile;
+        console.log('Successfully retrieved user profile');
+      } catch (getError) {
+        console.log('Profile not found, creating new profile...');
+        
+        const createResponse = await userApi.createProfile({
+          userId: userData.userId,
+          name: userData.name,
+          email: userData.email,
+          bio: 'Welcome to Work & Invest!',
+          skills: [],
+          location: ''
+        });
+        
+        if (createResponse.success) {
+          userProfile = createResponse.profile;
+          console.log('Successfully created user profile');
+        } else {
+          throw new Error('Failed to create profile');
+        }
+      }
+
+      // Get wallet data
+      const walletResponse = await walletApi.getWallet(userData.userId);
+      const walletData = walletResponse.wallet;
+      
+      setUser(userProfile);
+      setWallet(walletData);
+      setIsLoggedIn(true);
+      setCurrentPage('dashboard');
+      console.log('Login completed successfully');
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      
+      // Fallback to basic profile if backend fails
+      const fallbackProfile: UserProfile = {
+        id: userData.userId,
+        name: userData.name,
+        email: userData.email,
+        bio: 'Welcome to Work & Invest!',
+        skills: [],
+        location: '',
+        avatar: '',
+        rating: 0,
+        completedJobs: 0,
+        totalEarnings: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const fallbackWallet: WalletType = { money: 50, credits: 100, equity: 0 };
+      
+      setUser(fallbackProfile);
+      setWallet(fallbackWallet);
+      setIsLoggedIn(true);
+      setCurrentPage('dashboard');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUser(null);
+    setWallet(null);
+    setCurrentPage('landing');
+  };
+
+  const navigateTo = (page: PageType) => {
+    if (page === 'landing') {
+      handleLogout();
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
+  const userContextValue: UserContextType = {
+    user,
+    wallet,
+    setUser,
+    setWallet,
+    refreshWallet
+  };
+
+  const handleOnboardingComplete = async () => {
+    if (!newUserData) return;
+    
+    setShowOnboarding(false);
+    // Now proceed with normal auth flow
+    await handleAuthSuccess(newUserData, false);
+  };
+
+  const handleOnboardingSkip = async () => {
+    if (!newUserData) return;
+    
+    setShowOnboarding(false);
+    // Proceed with normal auth flow even if skipped
+    await handleAuthSuccess(newUserData, false);
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <ThemeProvider>
+        <I18nProvider>
+          <Toaster richColors position="top-right" expand={true} />
+          
+          {showOnboarding && newUserData && (
+            <ProfileOnboarding
+              userId={newUserData.userId}
+              userName={newUserData.name}
+              userEmail={newUserData.email}
+              onComplete={handleOnboardingComplete}
+              onSkip={handleOnboardingSkip}
+            />
+          )}
+          
+          {!showOnboarding && currentPage === 'landing' && (
+            <LandingPage 
+              onGetStarted={() => {
+                setAuthMode('register');
+                setCurrentPage('auth');
+              }} 
+              onSignIn={() => {
+                setAuthMode('login');
+                setCurrentPage('auth');
+              }} 
+            />
+          )}
+          
+          {!showOnboarding && currentPage === 'auth' && (
+            <AuthForm 
+              onSuccess={handleAuthSuccess}
+              onBack={() => setCurrentPage('landing')}
+              defaultTab={authMode}
+            />
+          )}
+        </I18nProvider>
+      </ThemeProvider>
+    );
+  }
+
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard onNavigate={navigateTo} onLogout={handleLogout} />;
+      case 'hire':
+        return <HireMode onNavigate={navigateTo} />;
+      case 'skillswap':
+        return <SkillSwapMode onNavigate={navigateTo} />;
+      case 'investment':
+        return <InvestmentMode onNavigate={navigateTo} />;
+      case 'profile':
+        return <Profile onNavigate={navigateTo} />;
+      case 'wallet':
+        return <Wallet onNavigate={navigateTo} />;
+      case 'settings':
+        return <Settings onNavigate={navigateTo} onLogout={handleLogout} />;
+      default:
+        return <Dashboard onNavigate={navigateTo} onLogout={handleLogout} />;
+    }
+  };
+
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <UserContext.Provider value={userContextValue}>
+          <div className="min-h-screen bg-background">
+            {renderCurrentPage()}
+            <Toaster />
+          </div>
+        </UserContext.Provider>
+      </I18nProvider>
+    </ThemeProvider>
+  );
+}

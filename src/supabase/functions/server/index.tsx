@@ -31,7 +31,7 @@ function getCurrentTimestamp() {
 }
 
 // Health check endpoint
-app.get("/make-server-478a5c23/health", (c) => {
+app.get("/health", (c) => { // Removed /make-server-478a5c23
   return c.json({ 
     status: "ok",
     timestamp: getCurrentTimestamp(),
@@ -40,7 +40,7 @@ app.get("/make-server-478a5c23/health", (c) => {
 });
 
 // Database cleanup endpoint (for development/testing)
-app.delete("/make-server-478a5c23/admin/cleanup", async (c) => {
+app.delete("/admin/cleanup", async (c) => { // Removed /make-server-478a5c23
   try {
     // Get all keys and delete auth, user, and wallet data
     const authKeys = await kv.getByPrefix("auth:");
@@ -95,7 +95,7 @@ app.delete("/make-server-478a5c23/admin/cleanup", async (c) => {
 // ==================== AUTHENTICATION ====================
 
 // Sign up new user
-app.post("/make-server-478a5c23/auth/signup", async (c) => {
+app.post("/auth/signup", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { email, password, name } = body;
@@ -177,7 +177,7 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
 });
 
 // Sign in user
-app.post("/make-server-478a5c23/auth/signin", async (c) => {
+app.post("/auth/signin", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { email, password } = body;
@@ -243,7 +243,7 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
 // ==================== USER MANAGEMENT ====================
 
 // Create user profile (POST for initial creation if not done during signup)
-app.post("/make-server-478a5c23/users/profile", async (c) => {
+app.post("/users/profile", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { userId, name, email, bio, skills, avatar, location, onboardingCompleted, profileCompleteness, jobExperiences, studyExperiences } = body;
@@ -289,7 +289,7 @@ app.post("/make-server-478a5c23/users/profile", async (c) => {
 });
 
 // Get user profile
-app.get("/make-server-478a5c23/users/:userId", async (c) => {
+app.get("/users/:userId", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     console.log(`Backend: GET /users/:userId for userId: ${userId}`);
@@ -309,7 +309,7 @@ app.get("/make-server-478a5c23/users/:userId", async (c) => {
 });
 
 // Update user profile (PUT request)
-app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
+app.put("/users/:userId/profile", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     const body = await c.req.json();
@@ -344,7 +344,7 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
 // ==================== WALLET MANAGEMENT ====================
 
 // Get wallet balance
-app.get("/make-server-478a5c23/wallet/:userId", async (c) => {
+app.get("/wallet/:userId", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     console.log(`Backend: GET /wallet/:userId for userId: ${userId}`);
@@ -370,7 +370,7 @@ app.get("/make-server-478a5c23/wallet/:userId", async (c) => {
 });
 
 // Update wallet balance
-app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
+app.post("/wallet/:userId/update", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     const body = await c.req.json();
@@ -420,7 +420,7 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
 });
 
 // Get transaction history
-app.get("/make-server-478a5c23/wallet/:userId/transactions", async (c) => {
+app.get("/wallet/:userId/transactions", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     console.log(`Backend: GET /wallet/:userId/transactions for userId: ${userId}`);
@@ -441,7 +441,7 @@ app.get("/make-server-478a5c23/wallet/:userId/transactions", async (c) => {
 // ==================== HIRE MODE ====================
 
 // Create job posting
-app.post("/make-server-478a5c23/jobs", async (c) => {
+app.post("/jobs", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { title, description, budget, deadline, skills, employerId } = body;
@@ -479,7 +479,7 @@ app.post("/make-server-478a5c23/jobs", async (c) => {
 });
 
 // Get all job postings
-app.get("/make-server-478a5c23/jobs", async (c) => {
+app.get("/jobs", async (c) => { // Removed /make-server-478a5c23
   try {
     console.log("Backend: GET /jobs received.");
     const jobs = await kv.getByPrefix("job:");
@@ -496,7 +496,7 @@ app.get("/make-server-478a5c23/jobs", async (c) => {
 });
 
 // Apply to job
-app.post("/make-server-478a5c23/jobs/:jobId/apply", async (c) => {
+app.post("/jobs/:jobId/apply", async (c) => { // Removed /make-server-478a5c23
   try {
     const jobId = c.req.param("jobId");
     const body = await c.req.json();
@@ -543,7 +543,7 @@ app.post("/make-server-478a5c23/jobs/:jobId/apply", async (c) => {
 // ==================== SKILL SWAP MODE ====================
 
 // Create skill offering
-app.post("/make-server-478a5c23/skills", async (c) => {
+app.post("/skills", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { title, description, category, offeredBy, lookingFor, duration } = body;
@@ -580,7 +580,7 @@ app.post("/make-server-478a5c23/skills", async (c) => {
 });
 
 // Get skill offerings
-app.get("/make-server-478a5c23/skills", async (c) => {
+app.get("/skills", async (c) => { // Removed /make-server-478a5c23
   try {
     console.log("Backend: GET /skills received.");
     const skills = await kv.getByPrefix("skill:");
@@ -597,7 +597,7 @@ app.get("/make-server-478a5c23/skills", async (c) => {
 });
 
 // Request skill swap
-app.post("/make-server-478a5c23/skills/:skillId/request", async (c) => {
+app.post("/skills/:skillId/request", async (c) => { // Removed /make-server-478a5c23
   try {
     const skillId = c.req.param("skillId");
     const body = await c.req.json();
@@ -645,7 +645,7 @@ app.post("/make-server-478a5c23/skills/:skillId/request", async (c) => {
 // ==================== INVESTMENT MODE ====================
 
 // Create investment project
-app.post("/make-server-478a5c23/projects", async (c) => {
+app.post("/projects", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { title, description, fundingGoal, minInvestment, expectedReturn, riskLevel, category, ownerId } = body;
@@ -685,7 +685,7 @@ app.post("/make-server-478a5c23/projects", async (c) => {
 });
 
 // Get investment projects
-app.get("/make-server-478a5c23/projects", async (c) => {
+app.get("/projects", async (c) => { // Removed /make-server-478a5c23
   try {
     console.log("Backend: GET /projects received.");
     const projects = await kv.getByPrefix("project:");
@@ -702,7 +702,7 @@ app.get("/make-server-478a5c23/projects", async (c) => {
 });
 
 // Make investment
-app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
+app.post("/projects/:projectId/invest", async (c) => { // Removed /make-server-478a5c23
   try {
     const projectId = c.req.param("projectId");
     const body = await c.req.json();
@@ -782,7 +782,7 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
 // ==================== NOTIFICATIONS ====================
 
 // Get notifications for user
-app.get("/make-server-478a5c23/notifications/:userId", async (c) => {
+app.get("/notifications/:userId", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     console.log(`Backend: GET /notifications/:userId for userId: ${userId}`);
@@ -800,7 +800,7 @@ app.get("/make-server-478a5c23/notifications/:userId", async (c) => {
 });
 
 // Create notification
-app.post("/make-server-478a5c23/notifications", async (c) => {
+app.post("/notifications", async (c) => { // Removed /make-server-478a5c23
   try {
     const body = await c.req.json();
     const { userId, title, message, type } = body;
@@ -833,7 +833,7 @@ app.post("/make-server-478a5c23/notifications", async (c) => {
 });
 
 // Mark notification as read
-app.put("/make-server-478a5c23/notifications/:userId/:notificationId/read", async (c) => {
+app.put("/notifications/:userId/:notificationId/read", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     const notificationId = c.req.param("notificationId");
@@ -847,7 +847,7 @@ app.put("/make-server-478a5c23/notifications/:userId/:notificationId/read", asyn
     }
 
     notification.read = true;
-    await kv.set(`notification:${userId}:${notificationId}`, notification);
+    await kv.set(`notification:${userId}:${notification.id}`, notification);
     console.log(`Backend: Notification ${notificationId} marked as read for user ${userId}.`);
     
     return c.json({ success: true, notification });
@@ -858,7 +858,7 @@ app.put("/make-server-478a5c23/notifications/:userId/:notificationId/read", asyn
 });
 
 // Mark all notifications as read
-app.put("/make-server-478a5c23/notifications/:userId/mark-all-read", async (c) => {
+app.put("/notifications/:userId/mark-all-read", async (c) => { // Removed /make-server-478a5c23
   try {
     const userId = c.req.param("userId");
     console.log(`Backend: PUT /notifications/:userId/mark-all-read for userId: ${userId}`);

@@ -187,17 +187,25 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
 
   const handleComplete = async () => {
     setIsLoading(true);
+    if (!userId) {
+      console.error('ProfileOnboarding.tsx: userId is missing, cannot complete onboarding.');
+      toast.error(t('onboarding.saveFailed') + ': User ID missing.');
+      setIsLoading(false);
+      return;
+    }
+    
+    const profileDataToSend = {
+      bio: data.bio,
+      location: data.location,
+      skills: data.skills,
+      jobExperiences: data.jobExperiences,
+      studyExperiences: data.studyExperiences,
+      onboardingCompleted: true,
+      profileCompleteness: calculateCompleteness()
+    };
     
     try {
-      const updatedProfileResponse = await userApi.updateProfile(userId, {
-        bio: data.bio,
-        location: data.location,
-        skills: data.skills,
-        jobExperiences: data.jobExperiences,
-        studyExperiences: data.studyExperiences,
-        onboardingCompleted: true,
-        profileCompleteness: calculateCompleteness()
-      });
+      const updatedProfileResponse = await userApi.updateProfile(userId, profileDataToSend);
       
       if (updatedProfileResponse.success) {
         setUser(updatedProfileResponse.profile); // Update user context with the new profile
@@ -207,7 +215,7 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
         toast.error(updatedProfileResponse.error || t('onboarding.saveFailed'));
       }
     } catch (error) {
-      console.error('Error updating profile during onboarding:', error);
+      console.error('ProfileOnboarding.tsx: Error updating profile during onboarding:', error);
       toast.error(t('onboarding.saveFailed'));
     } finally {
       setIsLoading(false);

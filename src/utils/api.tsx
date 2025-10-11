@@ -17,6 +17,7 @@ async function apiRequest<T = any>(
   let rawResponseText = '';
   try {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`API Request URL (${method}):`, url); // Log the full URL
     const options: RequestInit = {
       method,
       headers: {

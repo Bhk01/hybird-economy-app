@@ -73,6 +73,9 @@ export function Dashboard({ onNavigate, onLogout }: DashboardProps) {
     );
   }
 
+  // Define totalBalance here, including money, equity, and converted credits
+  const totalBalance = (wallet.money || 0) + (wallet.equity || 0) + ((wallet.credits || 0) * 10); // Assuming 1 credit = 10 TND for total value calculation
+
   const stats = [
     { label: t('dashboard.skillCredits'), value: `${wallet.credits}`, icon: RefreshCw, color: 'text-purple-500' },
     { label: t('dashboard.userRating'), value: user.rating.toFixed(1), icon: Star, color: 'text-yellow-500' },

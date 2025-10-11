@@ -83,7 +83,7 @@ const translations: Record<Language, TranslationData> = {
       cancel: 'Cancel',
       delete: 'Delete',
       edit: 'Edit',
-      close: 'Close',
+      close: 'Close', // Added this key
       add: 'Add'
     },
     // Navigation
@@ -200,7 +200,14 @@ const translations: Record<Language, TranslationData> = {
       registrationFailed: 'Registration failed. Please try again.',
       wrongPassword: 'Incorrect password. Try again or reset your password.',
       noAccountFound: 'No account found with this email. Please sign up.',
-      invalidEmail: 'Enter a valid email.'
+      invalidEmail: 'Enter a valid email.',
+      developerTools: 'Developer Tools',
+      hideDeveloperTools: 'Hide Developer Tools',
+      showDeveloperTools: 'Show Developer Tools',
+      cleanupWarning: 'Warning: This will delete ALL user accounts and data. Use only for testing.',
+      resetDatabase: 'Reset Database (Delete All Data)',
+      cleaning: 'Cleaning...',
+      emailExistsHint: 'Use this if you see "email already exists" errors'
     },
     // Dashboard
     dashboard: {
@@ -401,7 +408,7 @@ const translations: Record<Language, TranslationData> = {
       cancel: 'إلغاء',
       delete: 'حذف',
       edit: 'تعديل',
-      close: 'إغلاق',
+      close: 'إغلاق', // Added this key
       add: 'إضافة'
     },
     // Onboarding
@@ -582,7 +589,14 @@ const translations: Record<Language, TranslationData> = {
       registrationFailed: 'فشل التسجيل. يرجى المحاولة مرة أخرى.',
       wrongPassword: 'كلمة المرور غير صحيحة. حاول مرة أخرى أو أعد تعيين كلمة المرور.',
       noAccountFound: 'لم يتم العثور على حساب بهذا البريد الإلكتروني. يرجى التسجيل.',
-      invalidEmail: 'أدخل بريدًا إلكترونيًا صالحًا.'
+      invalidEmail: 'أدخل بريدًا إلكترونيًا صالحًا.',
+      developerTools: 'أدوات المطور',
+      hideDeveloperTools: 'إخفاء أدوات المطور',
+      showDeveloperTools: 'إظهار أدوات المطور',
+      cleanupWarning: 'تحذير: سيؤدي هذا إلى حذف جميع حسابات المستخدمين والبيانات. استخدمه للاختبار فقط.',
+      resetDatabase: 'إعادة تعيين قاعدة البيانات (حذف جميع البيانات)',
+      cleaning: 'جاري التنظيف...',
+      emailExistsHint: 'استخدم هذا إذا رأيت أخطاء "البريد الإلكتروني موجود بالفعل"'
     },
     // Dashboard
     dashboard: {
@@ -807,7 +821,7 @@ const translations: Record<Language, TranslationData> = {
       cancel: 'Annuler',
       delete: 'Supprimer',
       edit: 'Modifier',
-      close: 'Fermer',
+      close: 'Fermer', // Added this key
       add: 'Ajouter'
     },
     // Onboarding
@@ -988,14 +1002,21 @@ const translations: Record<Language, TranslationData> = {
       registrationFailed: 'Échec de l\'inscription. Veuillez réessayer.',
       wrongPassword: 'Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.',
       noAccountFound: 'Aucun compte trouvé avec cet email. Veuillez vous inscrire.',
-      invalidEmail: 'Entrez un email valide.'
+      invalidEmail: 'Entrez un email valide.',
+      developerTools: 'Outils de développement',
+      hideDeveloperTools: 'Masquer les outils de développement',
+      showDeveloperTools: 'Afficher les outils de développement',
+      cleanupWarning: 'Attention: Cela supprimera TOUS les comptes utilisateurs et les données. Utilisez uniquement pour les tests.',
+      resetDatabase: 'Réinitialiser la base de données (Supprimer toutes les données)',
+      cleaning: 'Nettoyage...',
+      emailExistsHint: 'Utilisez ceci si vous voyez des erreurs "l\'email existe déjà"'
     },
     // Dashboard
     dashboard: {
       welcomeBack: 'Bon retour',
       subtitle: 'Voici ce qui se passe avec votre travail, vos échanges et vos investissements.',
       loadingData: 'Chargement de vos dernières données...',
-      totalBalance: 'Solde total',
+            totalBalance: 'Solde total',
       money: 'Argent',
       skillCredits: 'Crédits de compétences',
       userRating: 'Évaluation utilisateur',
@@ -1035,13 +1056,7 @@ const translations: Record<Language, TranslationData> = {
       active: 'actif',
       viewAllActivity: 'Voir toute l\'activité',
       aiRecommendations: 'Recommandations IA',
-      aiRecommendationsDesc: 'Opportunités personnalisées basées sur votre profil',
-      justNow: 'À l\'instant',
-      hoursAgo: 'heures passées',
-      daysAgo: 'jours passés',
-      completed: 'terminé',
-      pending: 'en attente',
-      active: 'actif'
+      aiRecommendationsDesc: 'Opportunités personnalisées basées sur votre profil'
     },
     // Common
     common: {

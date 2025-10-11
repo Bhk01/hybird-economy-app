@@ -139,7 +139,7 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
             duration: 5000,
             position: 'top-center',
             action: {
-              label: 'Sign In',
+              label: t('auth.signIn'), // Translated
               onClick: () => {
                 // Switch to login tab
                 const loginTab = document.querySelector('[value="login"]') as HTMLButtonElement;
@@ -224,7 +224,7 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
   };
 
   const handleCleanupDatabase = async () => {
-    if (!window.confirm('⚠️ WARNING: This will delete ALL user accounts and data!\n\nAre you absolutely sure? This cannot be undone.')) {
+    if (!window.confirm(t('auth.cleanupConfirm'))) { // Translated
       return;
     }
 
@@ -239,7 +239,7 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
       setRegisterData({ name: '', email: '', password: '', confirmPassword: '' });
     } catch (error: any) {
       console.error('Cleanup error:', error);
-      toast.error('Failed to cleanup database: ' + (error.message || 'Unknown error'));
+      toast.error(t('auth.cleanupError') + ': ' + (error.message || 'Unknown error')); // Translated
     } finally {
       setIsLoading(false);
     }
@@ -260,10 +260,10 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
           </CardDescription>
           <div className="flex justify-center gap-2 mt-4">
             <Badge variant="secondary" className="text-xs">
-              🔒 Secure Authentication
+              🔒 {t('auth.secureAuthentication')}
             </Badge>
             <Badge variant="secondary" className="text-xs">
-              🌍 Multi-language
+              🌍 {t('auth.multiLanguage')}
             </Badge>
           </div>
         </CardHeader>
@@ -532,7 +532,7 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
               onClick={() => setShowDevTools(!showDevTools)}
             >
               <Database className="mr-2 h-3 w-3" />
-              {showDevTools ? 'Hide' : 'Show'} Developer Tools
+              {showDevTools ? t('auth.hideDeveloperTools') : t('auth.showDeveloperTools')}
             </Button>
 
             {showDevTools && (
@@ -540,7 +540,7 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
                 <Alert className="border-yellow-300 dark:border-yellow-700">
                   <AlertCircle className="h-4 w-4 !text-yellow-600 dark:!text-yellow-500" />
                   <AlertDescription className="text-xs text-yellow-800 dark:text-yellow-200">
-                    <strong>Warning:</strong> This will delete ALL user accounts and data. Use only for testing.
+                    <strong>{t('auth.cleanupWarning').split(':')[0]}:</strong> {t('auth.cleanupWarning').split(':')[1]}
                   </AlertDescription>
                 </Alert>
 
@@ -555,18 +555,18 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      Cleaning...
+                      {t('auth.cleaning')}
                     </>
                   ) : (
                     <>
                       <Trash2 className="mr-2 h-3 w-3" />
-                      Reset Database (Delete All Data)
+                      {t('auth.resetDatabase')}
                     </>
                   )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  Use this if you see "email already exists" errors
+                  {t('auth.emailExistsHint')}
                 </p>
               </div>
             )}

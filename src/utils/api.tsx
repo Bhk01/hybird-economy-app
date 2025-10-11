@@ -14,6 +14,7 @@ async function apiRequest<T = any>(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   data?: any
 ): Promise<T & ApiResponse> { // Ensure ApiResponse is part of the return type
+  let rawResponseText = '';
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const options: RequestInit = {
@@ -29,9 +30,21 @@ async function apiRequest<T = any>(
     }
 
     const response = await fetch(url, options);
-    const result = await response.json();
+    
+    // Read the response as text first to debug JSON parsing issues
+    rawResponseText = await response.text();
+    console.log(`API Raw Response (${method} ${endpoint}):`, rawResponseText);
 
-    console.log(`API Response (${method} ${endpoint}):`, {
+    let result;
+    try {
+      result = JSON.parse(rawResponseText);
+    } catch (jsonError) {
+      console.error(`API JSON Parse Error (${method} ${endpoint}):`, jsonError);
+      console.error('Raw response text that caused the error:', rawResponseText);
+      throw new Error(`Failed to parse JSON response: ${rawResponseText.substring(0, 100)}...`);
+    }
+
+    console.log(`API Parsed Response (${method} ${endpoint}):`, {
       status: response.status,
       ok: response.ok,
       result

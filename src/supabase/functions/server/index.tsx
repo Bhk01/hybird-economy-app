@@ -233,17 +233,21 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
 // ==================== USER MANAGEMENT ====================
 
 // Create or update user profile (POST for initial creation, PUT for updates)
-app.post("/make-server-478a5c22/users/profile", async (c) => {
+app.post("/make-server-478a5c23/users/profile", async (c) => { // Corrected path here
   try {
     const body = await c.req.json();
     const { userId, name, email, bio, skills, avatar, location, onboardingCompleted, profileCompleteness, jobExperiences, studyExperiences } = body;
 
+    console.log(`POST /users/profile received for userId: ${userId}, body:`, body);
+
     if (!userId || !name || !email) {
+      console.log("Missing required fields for POST /users/profile");
       return c.json({ error: "Missing required fields: userId, name, email" }, 400);
     }
 
     // Get existing profile to preserve certain fields
     const existingProfile = await kv.get(`user:${userId}`);
+    console.log(`Existing profile for ${userId} (POST):`, existingProfile);
     
     const profile = {
       id: userId,
@@ -278,9 +282,11 @@ app.post("/make-server-478a5c22/users/profile", async (c) => {
 app.get("/make-server-478a5c23/users/:userId", async (c) => {
   try {
     const userId = c.req.param("userId");
+    console.log(`GET /users/:userId for userId: ${userId}`);
     const profile = await kv.get(`user:${userId}`);
     
     if (!profile) {
+      console.log(`User profile not found for userId: ${userId}`);
       return c.json({ error: "User not found" }, 404);
     }
     
@@ -297,8 +303,11 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     const userId = c.req.param("userId");
     const body = await c.req.json();
 
+    console.log(`PUT /users/:userId/profile received for userId: ${userId}, body:`, body);
+
     const existingProfile = await kv.get(`user:${userId}`);
     if (!existingProfile) {
+      console.log(`Existing profile not found for userId: ${userId} during PUT update.`);
       return c.json({ error: "User not found" }, 404);
     }
 
@@ -309,7 +318,7 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     };
 
     await kv.set(`user:${userId}`, updatedProfile);
-    console.log(`Updated profile for user: ${userId}`);
+    console.log(`Updated profile for user: ${userId}, new profile:`, updatedProfile);
     
     return c.json({ success: true, profile: updatedProfile });
   } catch (error) {

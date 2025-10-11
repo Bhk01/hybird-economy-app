@@ -10,10 +10,11 @@ import { Profile } from './components/Profile';
 import { WalletSimple as Wallet } from './components/WalletSimple';
 import { Settings } from './components/Settings';
 import { Toaster } from './components/ui/sonner';
-import { UserProfile, Wallet as WalletType, userApi, walletApi } from './utils/api';
+import { UserProfile, Wallet as WalletType, userApi, walletApi, mockBackend, authApi } from './utils/api'; // Import mockBackend and authApi
 import { I18nProvider } from './utils/i18n';
 import { ThemeProvider } from './utils/theme';
 import './utils/cleanup'; // Import cleanup utility for console access
+import { toast } from 'sonner'; // Import toast for demo mode feedback
 
 export type PageType = 'landing' | 'auth' | 'dashboard' | 'hire' | 'skillswap' | 'investment' | 'profile' | 'wallet' | 'settings';
 
@@ -44,6 +45,24 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [newUserData, setNewUserData] = useState<{ userId: string; name: string; email: string } | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  // Initialize mock backend data on first load
+  useEffect(() => {
+    const initializeDemoUser = async () => {
+      const demoEmail = 'demo@workandinvest.com';
+      const demoPassword = 'demo123';
+      const demoName = 'Demo User';
+
+      // Check if demo user exists in local storage
+      const existingAuth = localStorage.getItem(`work_invest_mock_auth:${demoEmail}`);
+      if (!existingAuth) {
+        // If not, create it
+        await authApi.signUp(demoEmail, demoPassword, demoName);
+        toast.info('Demo user created in local storage!');
+      }
+    };
+    initializeDemoUser();
+  }, []);
 
   const refreshWallet = async () => {
     if (user) {

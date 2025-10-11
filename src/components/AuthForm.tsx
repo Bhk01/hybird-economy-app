@@ -10,11 +10,13 @@ import { Separator } from './ui/separator';
 import { Progress } from './ui/progress';
 import { Alert, AlertDescription } from './ui/alert';
 import { toast } from 'sonner@2.0.3';
-import { Eye, EyeOff, Loader2, Mail, ShieldCheck, HelpCircle, LogIn, UserPlus, Check, X, AlertCircle, Database, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, ShieldCheck, HelpCircle, LogIn, UserPlus, Check, X, AlertCircle, Database, Trash2, ArrowLeft } from 'lucide-react';
 import { useI18n } from '../utils/i18n';
 
 interface AuthFormProps {
-  onSuccess: (userData: { userId: string; name: string; email: string }) => void;
+  onSuccess: (userData: { userId: string; name: string; email: string }, isNewUser?: boolean) => void;
+  onBack: () => void; // Added onBack prop
+  defaultTab?: 'login' | 'register';
 }
 
 export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormProps) {
@@ -315,7 +317,11 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
                   </div>
                 </div>
                 
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <Button variant="link" className="px-0 text-sm" onClick={onBack}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {t('common.back')}
+                  </Button>
                   <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
                     <DialogTrigger asChild>
                       <Button variant="link" className="px-0 text-sm">

@@ -23,6 +23,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { userApi, JobExperience, StudyExperience } from '../utils/api';
+import { useUser } from '../App'; // Import useUser to update context
 
 interface ProfileOnboardingProps {
   userId: string;
@@ -45,6 +46,7 @@ interface OnboardingData {
 
 export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onSkip }: ProfileOnboardingProps) {
   const { t } = useI18n();
+  const { setUser } = useUser(); // Get setUser from context
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -185,25 +187,32 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
 
   const handleComplete = async () => {
     setIsLoading(true);
-    console.log('Frontend: Attempting to complete onboarding for userId:', userId);
-    console.log('Frontend: Data being sent to updateProfile:', data);
+    console.log('ProfileOnboarding.tsx: Attempting to complete onboarding for userId:', userId);
+    const profileDataToSend = {
+      bio: data.bio,
+      location: data.location,
+      skills: data.skills,
+      jobExperiences: data.jobExperiences,
+      studyExperiences: data.studyExperiences,
+      onboardingCompleted: true,
+      profileCompleteness: calculateCompleteness()
+    };
+    console.log('ProfileOnboarding.tsx: Data being sent to userApi.updateProfile:', profileDataToSend);
     
     try {
-      const updatedProfileResponse = await userApi.updateProfile(userId, {
-        bio: data.bio,
-        location: data.location,
-        skills: data.skills,
-        jobExperiences: data.jobExperiences,
-        studyExperiences: data.studyExperiences,
-        onboardingCompleted: true,
-        profileCompleteness: calculateCompleteness()
-      });
+      const updatedProfileResponse = await userApi.updateProfile(userId, profileDataToSend);
       
-      console.log('Frontend: Profile update successful:', updatedProfileResponse);
-      toast.success(t('onboarding.profileCompleted'));
-      onComplete();
+      if (updatedProfileResponse.success) {
+        console.log('ProfileOnboarding.tsx: Profile update successful:', updatedProfileResponse.profile);
+        setUser(updatedProfileResponse.profile); // Update user context with the new profile
+        toast.success(t('onboarding.profileCompleted'));
+        onComplete();
+      } else {
+        console.error('ProfileOnboarding.tsx: Profile update reported as unsuccessful by API:', updatedProfileResponse.error);
+        toast.error(updatedProfileResponse.error || t('onboarding.saveFailed'));
+      }
     } catch (error) {
-      console.error('Frontend: Error updating profile during onboarding:', error);
+      console.error('ProfileOnboarding.tsx: Error updating profile during onboarding:', error);
       toast.error(t('onboarding.saveFailed'));
     } finally {
       setIsLoading(false);

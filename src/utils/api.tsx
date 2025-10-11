@@ -3,7 +3,7 @@ import { projectId, publicAnonKey } from './supabase/info';
 const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-478a5c23`;
 
 interface ApiResponse<T = any> {
-  success?: boolean;
+  success?: boolean; // Added success property
   error?: string;
   [key: string]: any;
 }
@@ -13,7 +13,7 @@ async function apiRequest<T = any>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   data?: any
-): Promise<T> {
+): Promise<T & ApiResponse> { // Ensure ApiResponse is part of the return type
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const options: RequestInit = {
@@ -44,10 +44,11 @@ async function apiRequest<T = any>(
       throw new Error(errorMessage);
     }
 
-    return result;
+    return { ...result, success: true }; // Add success: true for successful responses
   } catch (error) {
     console.error(`API Request Failed (${method} ${endpoint}):`, error);
-    throw error;
+    // Return a structured error response
+    return { success: false, error: (error as Error).message || 'Unknown API error' } as T & ApiResponse;
   }
 }
 

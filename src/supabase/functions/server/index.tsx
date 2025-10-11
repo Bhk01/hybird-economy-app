@@ -46,32 +46,31 @@ app.delete("/make-server-478a5c23/admin/cleanup", async (c) => {
     const authKeys = await kv.getByPrefix("auth:");
     const userKeys = await kv.getByPrefix("user:");
     const walletKeys = await kv.getByPrefix("wallet:");
+    const jobKeys = await kv.getByPrefix("job:");
+    const skillKeys = await kv.getByPrefix("skill:");
+    const projectKeys = await kv.getByPrefix("project:");
+    const transactionKeys = await kv.getByPrefix("transaction:");
+    const notificationKeys = await kv.getByPrefix("notification:");
     
-    // Delete all auth entries
-    for (const entry of authKeys) {
-      const email = entry.email;
-      if (email) {
-        await kv.del(`auth:${email}`);
-      }
+    const allKeysToDelete = [
+      ...authKeys.map((e: any) => `auth:${e.email}`),
+      ...userKeys.map((e: any) => `user:${e.id}`),
+      ...walletKeys.map((e: any) => `wallet:${e.id || e.userId}`),
+      ...jobKeys.map((e: any) => `job:${e.id}`),
+      ...skillKeys.map((e: any) => `skill:${e.id}`),
+      ...projectKeys.map((e: any) => `project:${e.id}`),
+      ...transactionKeys.map((e: any) => `transaction:${e.id}`),
+      ...notificationKeys.map((e: any) => `notification:${e.userId}:${e.id}`),
+    ];
+
+    console.log(`Backend: Initiating database cleanup. Total keys to delete: ${allKeysToDelete.length}`);
+    
+    // Delete all entries
+    for (const key of allKeysToDelete) {
+      await kv.del(key);
     }
     
-    // Delete all user profiles
-    for (const entry of userKeys) {
-      const id = entry.id;
-      if (id) {
-        await kv.del(`user:${id}`);
-      }
-    }
-    
-    // Delete all wallets
-    for (const entry of walletKeys) {
-      const id = entry.id || entry.userId;
-      if (id) {
-        await kv.del(`wallet:${id}`);
-      }
-    }
-    
-    console.log(`Database cleanup completed. Removed ${authKeys.length} auth entries, ${userKeys.length} users, ${walletKeys.length} wallets.`);
+    console.log(`Backend: Database cleanup completed. Removed ${authKeys.length} auth entries, ${userKeys.length} users, ${walletKeys.length} wallets, etc.`);
     
     return c.json({ 
       success: true, 
@@ -79,11 +78,16 @@ app.delete("/make-server-478a5c23/admin/cleanup", async (c) => {
       removed: {
         auth: authKeys.length,
         users: userKeys.length,
-        wallets: walletKeys.length
+        wallets: walletKeys.length,
+        jobs: jobKeys.length,
+        skills: skillKeys.length,
+        projects: projectKeys.length,
+        transactions: transactionKeys.length,
+        notifications: notificationKeys.length,
       }
     });
   } catch (error) {
-    console.log(`Error cleaning database: ${error}`);
+    console.log(`Backend: Error cleaning database: ${error}`);
     return c.json({ success: false, error: "Failed to clean database" }, 500);
   }
 });
@@ -96,14 +100,17 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
     const body = await c.req.json();
     const { email, password, name } = body;
 
+    console.log(`Backend: Signup attempt for email: ${email}, name: ${name}`);
+
     if (!email || !password || !name) {
+      console.log("Backend: Missing required fields for signup.");
       return c.json({ success: false, error: "Missing required fields: email, password, name" }, 400);
     }
 
     // Check if user already exists
-    const existingUser = await kv.get(`auth:${email}`);
-    if (existingUser) {
-      console.log(`Signup blocked - email already exists: ${email}`);
+    const existingUserAuth = await kv.get(`auth:${email}`);
+    if (existingUserAuth) {
+      console.log(`Backend: Signup blocked - email already exists: ${email}`);
       return c.json({ 
         success: false, 
         error: "An account with this email already exists. Please sign in instead.",
@@ -123,8 +130,9 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
     };
 
     await kv.set(`auth:${email}`, userAuth);
+    console.log(`Backend: Stored auth for user: ${userId}`);
 
-    // Create user profile
+    // Create user profile with onboardingCompleted: false
     const profile = {
       id: userId,
       name,
@@ -138,22 +146,24 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
       totalEarnings: 0,
       createdAt: getCurrentTimestamp(),
       updatedAt: getCurrentTimestamp(),
-      onboardingCompleted: false,
+      onboardingCompleted: false, // Explicitly set to false for new users
       profileCompleteness: 0,
       jobExperiences: [],
       studyExperiences: []
     };
 
     await kv.set(`user:${userId}`, profile);
+    console.log(`Backend: Created initial user profile for: ${userId}`);
     
-    // Create initial wallet with 0 money (users will use credit cards for payments)
+    // Create initial wallet with 0 money, 20 credits, 0 equity
     await kv.set(`wallet:${userId}`, {
-      money: 0,  // No money balance - payments are via credit card
-      credits: 20,  // Starting credits for skill swaps
-      equity: 0  // No initial equity
+      money: 0,
+      credits: 20,
+      equity: 0
     });
+    console.log(`Backend: Created initial wallet for user: ${userId}`);
     
-    console.log(`Created new user: ${userId}`);
+    console.log(`Backend: New user signed up successfully: ${userId}`);
     
     return c.json({ 
       success: true, 
@@ -161,7 +171,7 @@ app.post("/make-server-478a5c23/auth/signup", async (c) => {
       message: "Account created successfully"
     });
   } catch (error) {
-    console.log(`Error creating user: ${error}`);
+    console.error(`Backend: Error creating user during signup: ${error}`);
     return c.json({ success: false, error: "Failed to create account" }, 500);
   }
 });
@@ -172,16 +182,17 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
     const body = await c.req.json();
     const { email, password } = body;
 
-    console.log(`Signin attempt for email: ${email}`);
+    console.log(`Backend: Signin attempt for email: ${email}`);
 
     if (!email || !password) {
+      console.log("Backend: Missing required fields for signin.");
       return c.json({ success: false, error: "Missing required fields: email, password" }, 400);
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.log(`❌ Invalid email format: ${email}`);
+      console.log(`Backend: ❌ Invalid email format: ${email}`);
       return c.json({ 
         success: false, 
         error: "Invalid email format. Please enter a valid email address." 
@@ -190,10 +201,10 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
 
     // Check if user exists
     const userAuth = await kv.get(`auth:${email}`);
-    console.log(`Retrieved user auth for ${email}:`, userAuth ? "✅ found" : "❌ not found");
+    console.log(`Backend: Retrieved user auth for ${email}:`, userAuth ? "✅ found" : "❌ not found");
     
     if (!userAuth) {
-      console.log(`❌ No user found for email: ${email}`);
+      console.log(`Backend: ❌ No user found for email: ${email}`);
       return c.json({ 
         success: false, 
         error: "No account found with this email. Please sign up." 
@@ -202,8 +213,7 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
 
     // Check password
     if (userAuth.password !== password) {
-      console.log(`❌ Password mismatch for ${email}`);
-      console.log(`Expected: ${userAuth.password}, Got: ${password}`);
+      console.log(`Backend: ❌ Password mismatch for ${email}`);
       return c.json({ 
         success: false, 
         error: "Incorrect password. Try again or reset your password." 
@@ -213,11 +223,11 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
     // Get user profile
     const profile = await kv.get(`user:${userAuth.id}`);
     if (!profile) {
-      console.log(`No profile found for user ID: ${userAuth.id}`);
+      console.log(`Backend: No profile found for user ID: ${userAuth.id} after successful auth.`);
       return c.json({ success: false, error: "User profile not found. Please contact support." }, 404);
     }
 
-    console.log(`User signed in successfully: ${userAuth.id}`);
+    console.log(`Backend: User signed in successfully: ${userAuth.id}`);
     
     return c.json({ 
       success: true, 
@@ -225,29 +235,29 @@ app.post("/make-server-478a5c23/auth/signin", async (c) => {
       message: "Login successful"
     });
   } catch (error) {
-    console.log(`Error signing in user: ${error}`);
+    console.error(`Backend: Error signing in user: ${error}`);
     return c.json({ success: false, error: "Failed to sign in. Please try again." }, 500);
   }
 });
 
 // ==================== USER MANAGEMENT ====================
 
-// Create or update user profile (POST for initial creation, PUT for updates)
-app.post("/make-server-478a5c23/users/profile", async (c) => { // Corrected path here
+// Create user profile (POST for initial creation if not done during signup)
+app.post("/make-server-478a5c23/users/profile", async (c) => {
   try {
     const body = await c.req.json();
     const { userId, name, email, bio, skills, avatar, location, onboardingCompleted, profileCompleteness, jobExperiences, studyExperiences } = body;
 
-    console.log(`POST /users/profile received for userId: ${userId}, body:`, body);
+    console.log(`Backend: POST /users/profile received for userId: ${userId}, body:`, body);
 
     if (!userId || !name || !email) {
-      console.log("Missing required fields for POST /users/profile");
+      console.log("Backend: Missing required fields for POST /users/profile.");
       return c.json({ error: "Missing required fields: userId, name, email" }, 400);
     }
 
-    // Get existing profile to preserve certain fields
+    // Get existing profile to preserve certain fields if it already exists
     const existingProfile = await kv.get(`user:${userId}`);
-    console.log(`Existing profile for ${userId} (POST):`, existingProfile);
+    console.log(`Backend: Existing profile for ${userId} (POST):`, existingProfile ? 'Found' : 'Not Found');
     
     const profile = {
       id: userId,
@@ -269,11 +279,11 @@ app.post("/make-server-478a5c23/users/profile", async (c) => { // Corrected path
     };
 
     await kv.set(`user:${userId}`, profile);
-    console.log(`Created/updated profile for user: ${userId}`);
+    console.log(`Backend: Created/updated profile for user: ${userId} via POST. Final profile:`, profile);
     
     return c.json({ success: true, profile });
   } catch (error) {
-    console.log(`Error creating/updating user profile: ${error}`);
+    console.error(`Backend: Error creating/updating user profile via POST: ${error}`);
     return c.json({ error: "Failed to create/update profile" }, 500);
   }
 });
@@ -282,17 +292,18 @@ app.post("/make-server-478a5c23/users/profile", async (c) => { // Corrected path
 app.get("/make-server-478a5c23/users/:userId", async (c) => {
   try {
     const userId = c.req.param("userId");
-    console.log(`GET /users/:userId for userId: ${userId}`);
+    console.log(`Backend: GET /users/:userId for userId: ${userId}`);
     const profile = await kv.get(`user:${userId}`);
     
     if (!profile) {
-      console.log(`User profile not found for userId: ${userId}`);
+      console.log(`Backend: User profile not found for userId: ${userId}.`);
       return c.json({ error: "User not found" }, 404);
     }
     
+    console.log(`Backend: Successfully fetched profile for userId: ${userId}.`);
     return c.json({ profile });
   } catch (error) {
-    console.log(`Error fetching user profile: ${error}`);
+    console.error(`Backend: Error fetching user profile: ${error}`);
     return c.json({ error: "Failed to fetch profile" }, 500);
   }
 });
@@ -306,12 +317,12 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     console.log(`Backend: PUT /users/:userId/profile received for userId: ${userId}, body:`, body);
 
     const existingProfile = await kv.get(`user:${userId}`);
-    console.log(`Backend: Attempting to retrieve profile for userId: ${userId}`);
+    console.log(`Backend: Attempting to retrieve profile for userId: ${userId} for update.`);
     console.log(`Backend: Existing profile found:`, existingProfile ? 'YES' : 'NO');
 
     if (!existingProfile) {
       console.log(`Backend: User profile not found for userId: ${userId} during PUT update. Returning 404.`);
-      return c.json({ error: "User not found" }, 404);
+      return c.json({ success: false, error: "User not found" }, 404);
     }
 
     const updatedProfile = {
@@ -321,12 +332,12 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     };
 
     await kv.set(`user:${userId}`, updatedProfile);
-    console.log(`Backend: Successfully updated profile for user: ${userId}, new profile:`, updatedProfile);
+    console.log(`Backend: Successfully updated profile for user: ${userId}. New profile:`, updatedProfile);
     
     return c.json({ success: true, profile: updatedProfile });
   } catch (error) {
-    console.log(`Backend: Error updating user profile for userId ${userId}: ${error}`);
-    return c.json({ error: "Failed to update profile" }, 500);
+    console.error(`Backend: Error updating user profile for userId ${userId}: ${error}`);
+    return c.json({ success: false, error: "Failed to update profile" }, 500);
   }
 });
 
@@ -336,6 +347,7 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
 app.get("/make-server-478a5c23/wallet/:userId", async (c) => {
   try {
     const userId = c.req.param("userId");
+    console.log(`Backend: GET /wallet/:userId for userId: ${userId}`);
     let wallet = await kv.get(`wallet:${userId}`);
     
     if (!wallet) {
@@ -346,12 +358,13 @@ app.get("/make-server-478a5c23/wallet/:userId", async (c) => {
         equity: 0
       };
       await kv.set(`wallet:${userId}`, wallet);
-      console.log(`Created default wallet for user: ${userId}`);
+      console.log(`Backend: Created default wallet for user: ${userId}`);
     }
     
+    console.log(`Backend: Fetched wallet for userId: ${userId}. Wallet:`, wallet);
     return c.json({ wallet });
   } catch (error) {
-    console.log(`Error fetching wallet: ${error}`);
+    console.error(`Backend: Error fetching wallet: ${error}`);
     return c.json({ error: "Failed to fetch wallet" }, 500);
   }
 });
@@ -363,7 +376,10 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
     const body = await c.req.json();
     const { type, amount, operation } = body; // type: 'money', 'credits', 'equity'; operation: 'add', 'subtract'
 
+    console.log(`Backend: POST /wallet/:userId/update for userId: ${userId}, type: ${type}, amount: ${amount}, operation: ${operation}`);
+
     if (!type || !amount || !operation) {
+      console.log("Backend: Missing required fields for wallet update.");
       return c.json({ error: "Missing required fields: type, amount, operation" }, 400);
     }
 
@@ -372,6 +388,7 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
       credits: 100,
       equity: 0
     };
+    console.log(`Backend: Current wallet for ${userId}:`, currentWallet);
 
     if (operation === 'add') {
       currentWallet[type] = (currentWallet[type] || 0) + amount;
@@ -380,6 +397,7 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
     }
 
     await kv.set(`wallet:${userId}`, currentWallet);
+    console.log(`Backend: Updated wallet for userId: ${userId}. New wallet:`, currentWallet);
     
     // Log transaction
     const transaction = {
@@ -392,10 +410,11 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
       balance: currentWallet[type]
     };
     await kv.set(`transaction:${transaction.id}`, transaction);
+    console.log(`Backend: Logged transaction:`, transaction);
     
     return c.json({ success: true, wallet: currentWallet });
   } catch (error) {
-    console.log(`Error updating wallet: ${error}`);
+    console.error(`Backend: Error updating wallet: ${error}`);
     return c.json({ error: "Failed to update wallet" }, 500);
   }
 });
@@ -404,15 +423,17 @@ app.post("/make-server-478a5c23/wallet/:userId/update", async (c) => {
 app.get("/make-server-478a5c23/wallet/:userId/transactions", async (c) => {
   try {
     const userId = c.req.param("userId");
+    console.log(`Backend: GET /wallet/:userId/transactions for userId: ${userId}`);
     const transactions = await kv.getByPrefix(`transaction:`);
     
     const userTransactions = transactions
       .filter(tx => tx.userId === userId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
+    console.log(`Backend: Fetched ${userTransactions.length} transactions for userId: ${userId}.`);
     return c.json({ transactions: userTransactions });
   } catch (error) {
-    console.log(`Error fetching transactions: ${error}`);
+    console.error(`Backend: Error fetching transactions: ${error}`);
     return c.json({ error: "Failed to fetch transactions" }, 500);
   }
 });
@@ -425,7 +446,10 @@ app.post("/make-server-478a5c23/jobs", async (c) => {
     const body = await c.req.json();
     const { title, description, budget, deadline, skills, employerId } = body;
 
+    console.log(`Backend: POST /jobs received for employerId: ${employerId}, title: ${title}`);
+
     if (!title || !description || !budget || !employerId) {
+      console.log("Backend: Missing required fields for job creation.");
       return c.json({ error: "Missing required fields: title, description, budget, employerId" }, 400);
     }
 
@@ -445,11 +469,11 @@ app.post("/make-server-478a5c23/jobs", async (c) => {
     };
 
     await kv.set(`job:${job.id}`, job);
-    console.log(`Created job posting: ${job.id}`);
+    console.log(`Backend: Created job posting: ${job.id}`);
     
     return c.json({ success: true, job });
   } catch (error) {
-    console.log(`Error creating job: ${error}`);
+    console.error(`Backend: Error creating job: ${error}`);
     return c.json({ error: "Failed to create job posting" }, 500);
   }
 });
@@ -457,14 +481,16 @@ app.post("/make-server-478a5c23/jobs", async (c) => {
 // Get all job postings
 app.get("/make-server-478a5c23/jobs", async (c) => {
   try {
+    console.log("Backend: GET /jobs received.");
     const jobs = await kv.getByPrefix("job:");
     const openJobs = jobs
       .filter(job => job.status === "open")
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
+    console.log(`Backend: Fetched ${openJobs.length} open jobs.`);
     return c.json({ jobs: openJobs });
   } catch (error) {
-    console.log(`Error fetching jobs: ${error}`);
+    console.error(`Backend: Error fetching jobs: ${error}`);
     return c.json({ error: "Failed to fetch jobs" }, 500);
   }
 });
@@ -476,16 +502,21 @@ app.post("/make-server-478a5c23/jobs/:jobId/apply", async (c) => {
     const body = await c.req.json();
     const { freelancerId, proposal, proposedBudget } = body;
 
+    console.log(`Backend: POST /jobs/:jobId/apply for jobId: ${jobId}, freelancerId: ${freelancerId}`);
+
     if (!freelancerId || !proposal) {
+      console.log("Backend: Missing required fields for job application.");
       return c.json({ error: "Missing required fields: freelancerId, proposal" }, 400);
     }
 
     const job = await kv.get(`job:${jobId}`);
     if (!job) {
+      console.log(`Backend: Job not found for jobId: ${jobId}.`);
       return c.json({ error: "Job not found" }, 404);
     }
 
     if (job.status !== "open") {
+      console.log(`Backend: Job ${jobId} is not open for applications.`);
       return c.json({ error: "Job is no longer accepting applications" }, 400);
     }
 
@@ -500,10 +531,11 @@ app.post("/make-server-478a5c23/jobs/:jobId/apply", async (c) => {
     job.updatedAt = getCurrentTimestamp();
 
     await kv.set(`job:${jobId}`, job);
+    console.log(`Backend: Freelancer ${freelancerId} applied to job ${jobId}.`);
     
     return c.json({ success: true, job });
   } catch (error) {
-    console.log(`Error applying to job: ${error}`);
+    console.error(`Backend: Error applying to job: ${error}`);
     return c.json({ error: "Failed to apply to job" }, 500);
   }
 });
@@ -516,7 +548,10 @@ app.post("/make-server-478a5c23/skills", async (c) => {
     const body = await c.req.json();
     const { title, description, category, offeredBy, lookingFor, duration } = body;
 
+    console.log(`Backend: POST /skills received for offeredBy: ${offeredBy}, title: ${title}`);
+
     if (!title || !description || !category || !offeredBy) {
+      console.log("Backend: Missing required fields for skill offering creation.");
       return c.json({ error: "Missing required fields: title, description, category, offeredBy" }, 400);
     }
 
@@ -535,11 +570,11 @@ app.post("/make-server-478a5c23/skills", async (c) => {
     };
 
     await kv.set(`skill:${skillOffering.id}`, skillOffering);
-    console.log(`Created skill offering: ${skillOffering.id}`);
+    console.log(`Backend: Created skill offering: ${skillOffering.id}`);
     
     return c.json({ success: true, skillOffering });
   } catch (error) {
-    console.log(`Error creating skill offering: ${error}`);
+    console.error(`Backend: Error creating skill offering: ${error}`);
     return c.json({ error: "Failed to create skill offering" }, 500);
   }
 });
@@ -547,14 +582,16 @@ app.post("/make-server-478a5c23/skills", async (c) => {
 // Get skill offerings
 app.get("/make-server-478a5c23/skills", async (c) => {
   try {
+    console.log("Backend: GET /skills received.");
     const skills = await kv.getByPrefix("skill:");
     const availableSkills = skills
       .filter(skill => skill.status === "available")
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
+    console.log(`Backend: Fetched ${availableSkills.length} available skill offerings.`);
     return c.json({ skills: availableSkills });
   } catch (error) {
-    console.log(`Error fetching skills: ${error}`);
+    console.error(`Backend: Error fetching skills: ${error}`);
     return c.json({ error: "Failed to fetch skills" }, 500);
   }
 });
@@ -566,16 +603,21 @@ app.post("/make-server-478a5c23/skills/:skillId/request", async (c) => {
     const body = await c.req.json();
     const { requesterId, message, offerInReturn } = body;
 
+    console.log(`Backend: POST /skills/:skillId/request for skillId: ${skillId}, requesterId: ${requesterId}`);
+
     if (!requesterId || !message) {
+      console.log("Backend: Missing required fields for skill swap request.");
       return c.json({ error: "Missing required fields: requesterId, message" }, 400);
     }
 
     const skill = await kv.get(`skill:${skillId}`);
     if (!skill) {
+      console.log(`Backend: Skill offering not found for skillId: ${skillId}.`);
       return c.json({ error: "Skill offering not found" }, 404);
     }
 
     if (skill.status !== "available") {
+      console.log(`Backend: Skill offering ${skillId} is not available for requests.`);
       return c.json({ error: "Skill offering is no longer available" }, 400);
     }
 
@@ -591,10 +633,11 @@ app.post("/make-server-478a5c23/skills/:skillId/request", async (c) => {
     skill.updatedAt = getCurrentTimestamp();
 
     await kv.set(`skill:${skillId}`, skill);
+    console.log(`Backend: Skill swap request from ${requesterId} for skill ${skillId}.`);
     
     return c.json({ success: true, skill });
   } catch (error) {
-    console.log(`Error requesting skill swap: ${error}`);
+    console.error(`Backend: Error requesting skill swap: ${error}`);
     return c.json({ error: "Failed to request skill swap" }, 500);
   }
 });
@@ -607,7 +650,10 @@ app.post("/make-server-478a5c23/projects", async (c) => {
     const body = await c.req.json();
     const { title, description, fundingGoal, minInvestment, expectedReturn, riskLevel, category, ownerId } = body;
 
+    console.log(`Backend: POST /projects received for ownerId: ${ownerId}, title: ${title}`);
+
     if (!title || !description || !fundingGoal || !ownerId) {
+      console.log("Backend: Missing required fields for project creation.");
       return c.json({ error: "Missing required fields: title, description, fundingGoal, ownerId" }, 400);
     }
 
@@ -629,11 +675,11 @@ app.post("/make-server-478a5c23/projects", async (c) => {
     };
 
     await kv.set(`project:${project.id}`, project);
-    console.log(`Created investment project: ${project.id}`);
+    console.log(`Backend: Created investment project: ${project.id}`);
     
     return c.json({ success: true, project });
   } catch (error) {
-    console.log(`Error creating project: ${error}`);
+    console.error(`Backend: Error creating project: ${error}`);
     return c.json({ error: "Failed to create project" }, 500);
   }
 });
@@ -641,14 +687,16 @@ app.post("/make-server-478a5c23/projects", async (c) => {
 // Get investment projects
 app.get("/make-server-478a5c23/projects", async (c) => {
   try {
+    console.log("Backend: GET /projects received.");
     const projects = await kv.getByPrefix("project:");
     const activeProjects = projects
       .filter(project => project.status === "funding")
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
+    console.log(`Backend: Fetched ${activeProjects.length} active investment projects.`);
     return c.json({ projects: activeProjects });
   } catch (error) {
-    console.log(`Error fetching projects: ${error}`);
+    console.error(`Backend: Error fetching projects: ${error}`);
     return c.json({ error: "Failed to fetch projects" }, 500);
   }
 });
@@ -660,22 +708,28 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
     const body = await c.req.json();
     const { investorId, amount } = body;
 
+    console.log(`Backend: POST /projects/:projectId/invest for projectId: ${projectId}, investorId: ${investorId}, amount: ${amount}`);
+
     if (!investorId || !amount || amount < 1) {
+      console.log("Backend: Missing required fields or invalid amount for investment.");
       return c.json({ error: "Missing required fields or invalid amount (minimum 1 TND)" }, 400);
     }
 
     const project = await kv.get(`project:${projectId}`);
     if (!project) {
+      console.log(`Backend: Project not found for projectId: ${projectId}.`);
       return c.json({ error: "Project not found" }, 404);
     }
 
     if (project.status !== "funding") {
+      console.log(`Backend: Project ${projectId} is not accepting investments.`);
       return c.json({ error: "Project is not accepting investments" }, 400);
     }
 
     // Check investor's wallet
     const wallet = await kv.get(`wallet:${investorId}`) || { money: 0, credits: 0, equity: 0 };
     if (wallet.money < amount) {
+      console.log(`Backend: Insufficient funds for investor ${investorId}. Available: ${wallet.money}, Required: ${amount}.`);
       return c.json({ error: "Insufficient funds" }, 400);
     }
 
@@ -693,6 +747,7 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
 
     if (project.currentFunding >= project.fundingGoal) {
       project.status = "funded";
+      console.log(`Backend: Project ${projectId} fully funded!`);
     }
 
     await kv.set(`project:${projectId}`, project);
@@ -715,9 +770,10 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
     };
     await kv.set(`transaction:${transaction.id}`, transaction);
     
+    console.log(`Backend: Investment of ${amount} TND made by ${investorId} in project ${projectId}.`);
     return c.json({ success: true, project, investment });
   } catch (error) {
-    console.log(`Error making investment: ${error}`);
+    console.error(`Backend: Error making investment: ${error}`);
     return c.json({ error: "Failed to make investment" }, 500);
   }
   }
@@ -729,14 +785,16 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
 app.get("/make-server-478a5c23/notifications/:userId", async (c) => {
   try {
     const userId = c.req.param("userId");
+    console.log(`Backend: GET /notifications/:userId for userId: ${userId}`);
     const notifications = await kv.getByPrefix(`notification:${userId}:`);
     
     const sortedNotifications = notifications
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
+    console.log(`Backend: Fetched ${sortedNotifications.length} notifications for userId: ${userId}.`);
     return c.json({ notifications: sortedNotifications });
   } catch (error) {
-    console.log(`Error fetching notifications: ${error}`);
+    console.error(`Backend: Error fetching notifications: ${error}`);
     return c.json({ error: "Failed to fetch notifications" }, 500);
   }
 });
@@ -747,7 +805,10 @@ app.post("/make-server-478a5c23/notifications", async (c) => {
     const body = await c.req.json();
     const { userId, title, message, type } = body;
 
+    console.log(`Backend: POST /notifications received for userId: ${userId}, title: ${title}`);
+
     if (!userId || !title || !message) {
+      console.log("Backend: Missing required fields for notification creation.");
       return c.json({ error: "Missing required fields: userId, title, message" }, 400);
     }
 
@@ -762,10 +823,11 @@ app.post("/make-server-478a5c23/notifications", async (c) => {
     };
 
     await kv.set(`notification:${userId}:${notification.id}`, notification);
+    console.log(`Backend: Created notification: ${notification.id} for user ${userId}.`);
     
     return c.json({ success: true, notification });
   } catch (error) {
-    console.log(`Error creating notification: ${error}`);
+    console.error(`Backend: Error creating notification: ${error}`);
     return c.json({ error: "Failed to create notification" }, 500);
   }
 });
@@ -776,17 +838,21 @@ app.put("/make-server-478a5c23/notifications/:userId/:notificationId/read", asyn
     const userId = c.req.param("userId");
     const notificationId = c.req.param("notificationId");
     
+    console.log(`Backend: PUT /notifications/:userId/:notificationId/read for userId: ${userId}, notificationId: ${notificationId}`);
+
     const notification = await kv.get(`notification:${userId}:${notificationId}`);
     if (!notification) {
+      console.log(`Backend: Notification not found for userId: ${userId}, notificationId: ${notificationId}.`);
       return c.json({ error: "Notification not found" }, 404);
     }
 
     notification.read = true;
     await kv.set(`notification:${userId}:${notificationId}`, notification);
+    console.log(`Backend: Notification ${notificationId} marked as read for user ${userId}.`);
     
     return c.json({ success: true, notification });
   } catch (error) {
-    console.log(`Error marking notification as read: ${error}`);
+    console.error(`Backend: Error marking notification as read: ${error}`);
     return c.json({ error: "Failed to mark notification as read" }, 500);
   }
 });
@@ -795,6 +861,7 @@ app.put("/make-server-478a5c23/notifications/:userId/:notificationId/read", asyn
 app.put("/make-server-478a5c23/notifications/:userId/mark-all-read", async (c) => {
   try {
     const userId = c.req.param("userId");
+    console.log(`Backend: PUT /notifications/:userId/mark-all-read for userId: ${userId}`);
     const notifications = await kv.getByPrefix(`notification:${userId}:`);
     
     // Update all notifications to read
@@ -803,13 +870,14 @@ app.put("/make-server-478a5c23/notifications/:userId/mark-all-read", async (c) =
       await kv.set(`notification:${userId}:${notification.id}`, notification);
     }
     
+    console.log(`Backend: Marked ${notifications.length} notifications as read for user ${userId}.`);
     return c.json({ 
       success: true, 
       message: `Marked ${notifications.length} notifications as read`,
       updatedCount: notifications.length 
     });
   } catch (error) {
-    console.log(`Error marking all notifications as read: ${error}`);
+    console.error(`Backend: Error marking all notifications as read: ${error}`);
     return c.json({ error: "Failed to mark all notifications as read" }, 500);
   }
 });

@@ -57,12 +57,13 @@ export default function App() {
   };
 
   const handleAuthSuccess = async (userData: { userId: string; name: string; email: string }, isNewUser: boolean = false) => {
-    console.log('Authentication successful, loading user data...', { isNewUser });
+    console.log('App.tsx: Authentication successful, loading user data...', { userData, isNewUser });
     
     // If new user, show onboarding
     if (isNewUser) {
       setNewUserData(userData);
       setShowOnboarding(true);
+      console.log('App.tsx: New user detected, showing onboarding for userId:', userData.userId);
       return;
     }
     
@@ -73,9 +74,9 @@ export default function App() {
       try {
         const getResponse = await userApi.getProfile(userData.userId);
         userProfile = getResponse.profile;
-        console.log('Successfully retrieved user profile');
+        console.log('App.tsx: Successfully retrieved existing user profile');
       } catch (getError) {
-        console.log('Profile not found, creating new profile...');
+        console.log('App.tsx: Profile not found for existing user, attempting to create default profile...');
         
         const createResponse = await userApi.createProfile({
           userId: userData.userId,
@@ -83,14 +84,15 @@ export default function App() {
           email: userData.email,
           bio: 'Welcome to Work & Invest!',
           skills: [],
-          location: ''
+          location: '',
+          onboardingCompleted: true // For existing users who might not have completed onboarding, assume complete for now
         });
         
         if (createResponse.success) {
           userProfile = createResponse.profile;
-          console.log('Successfully created user profile');
+          console.log('App.tsx: Successfully created default user profile for existing user');
         } else {
-          throw new Error('Failed to create profile');
+          throw new Error('Failed to create profile for existing user');
         }
       }
 
@@ -102,10 +104,10 @@ export default function App() {
       setWallet(walletData);
       setIsLoggedIn(true);
       setCurrentPage('dashboard');
-      console.log('Login completed successfully');
+      console.log('App.tsx: Login completed successfully, navigating to dashboard');
       
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('App.tsx: Error loading user data after auth success:', error);
       
       // Fallback to basic profile if backend fails
       const fallbackProfile: UserProfile = {
@@ -129,6 +131,7 @@ export default function App() {
       setWallet(fallbackWallet);
       setIsLoggedIn(true);
       setCurrentPage('dashboard');
+      console.log('App.tsx: Fallback to basic profile and wallet due to error, navigating to dashboard');
     }
   };
 
@@ -137,6 +140,7 @@ export default function App() {
     setUser(null);
     setWallet(null);
     setCurrentPage('landing');
+    console.log('App.tsx: User logged out, navigating to landing page');
   };
 
   const navigateTo = (page: PageType) => {
@@ -144,6 +148,7 @@ export default function App() {
       handleLogout();
     } else {
       setCurrentPage(page);
+      console.log('App.tsx: Navigating to page:', page);
     }
   };
 
@@ -156,17 +161,25 @@ export default function App() {
   };
 
   const handleOnboardingComplete = async () => {
-    if (!newUserData) return;
+    if (!newUserData) {
+      console.error('App.tsx: Onboarding completed but newUserData is null.');
+      return;
+    }
     
     setShowOnboarding(false);
-    // Now proceed with normal auth flow
+    console.log('App.tsx: Onboarding completed, proceeding with final auth success for userId:', newUserData.userId);
+    // Now proceed with normal auth flow, marking onboarding as complete
     await handleAuthSuccess(newUserData, false);
   };
 
   const handleOnboardingSkip = async () => {
-    if (!newUserData) return;
+    if (!newUserData) {
+      console.error('App.tsx: Onboarding skipped but newUserData is null.');
+      return;
+    }
     
     setShowOnboarding(false);
+    console.log('App.tsx: Onboarding skipped, proceeding with final auth success for userId:', newUserData.userId);
     // Proceed with normal auth flow even if skipped
     await handleAuthSuccess(newUserData, false);
   };
@@ -192,10 +205,12 @@ export default function App() {
               onGetStarted={() => {
                 setAuthMode('register');
                 setCurrentPage('auth');
+                console.log('App.tsx: Navigating to auth for registration');
               }} 
               onSignIn={() => {
                 setAuthMode('login');
                 setCurrentPage('auth');
+                console.log('App.tsx: Navigating to auth for login');
               }} 
             />
           )}
@@ -203,7 +218,10 @@ export default function App() {
           {!showOnboarding && currentPage === 'auth' && (
             <AuthForm 
               onSuccess={handleAuthSuccess}
-              onBack={() => setCurrentPage('landing')}
+              onBack={() => {
+                setCurrentPage('landing');
+                console.log('App.tsx: Navigating back to landing from auth');
+              }}
               defaultTab={authMode}
             />
           )}

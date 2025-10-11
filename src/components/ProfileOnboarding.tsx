@@ -185,11 +185,11 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
 
   const handleComplete = async () => {
     setIsLoading(true);
-    console.log('Attempting to complete onboarding for userId:', userId);
-    console.log('Data being sent:', data);
+    console.log('Frontend: Attempting to complete onboarding for userId:', userId);
+    console.log('Frontend: Data being sent to updateProfile:', data);
     
     try {
-      await userApi.updateProfile(userId, {
+      const updatedProfileResponse = await userApi.updateProfile(userId, {
         bio: data.bio,
         location: data.location,
         skills: data.skills,
@@ -199,10 +199,11 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
         profileCompleteness: calculateCompleteness()
       });
       
+      console.log('Frontend: Profile update successful:', updatedProfileResponse);
       toast.success(t('onboarding.profileCompleted'));
       onComplete();
     } catch (error) {
-      console.error('Error updating profile during onboarding:', error);
+      console.error('Frontend: Error updating profile during onboarding:', error);
       toast.error(t('onboarding.saveFailed'));
     } finally {
       setIsLoading(false);

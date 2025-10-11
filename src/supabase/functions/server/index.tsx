@@ -303,11 +303,14 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     const userId = c.req.param("userId");
     const body = await c.req.json();
 
-    console.log(`PUT /users/:userId/profile received for userId: ${userId}, body:`, body);
+    console.log(`Backend: PUT /users/:userId/profile received for userId: ${userId}, body:`, body);
 
     const existingProfile = await kv.get(`user:${userId}`);
+    console.log(`Backend: Attempting to retrieve profile for userId: ${userId}`);
+    console.log(`Backend: Existing profile found:`, existingProfile ? 'YES' : 'NO');
+
     if (!existingProfile) {
-      console.log(`Existing profile not found for userId: ${userId} during PUT update.`);
+      console.log(`Backend: User profile not found for userId: ${userId} during PUT update. Returning 404.`);
       return c.json({ error: "User not found" }, 404);
     }
 
@@ -318,11 +321,11 @@ app.put("/make-server-478a5c23/users/:userId/profile", async (c) => {
     };
 
     await kv.set(`user:${userId}`, updatedProfile);
-    console.log(`Updated profile for user: ${userId}, new profile:`, updatedProfile);
+    console.log(`Backend: Successfully updated profile for user: ${userId}, new profile:`, updatedProfile);
     
     return c.json({ success: true, profile: updatedProfile });
   } catch (error) {
-    console.log(`Error updating user profile: ${error}`);
+    console.log(`Backend: Error updating user profile for userId ${userId}: ${error}`);
     return c.json({ error: "Failed to update profile" }, 500);
   }
 });
@@ -717,7 +720,8 @@ app.post("/make-server-478a5c23/projects/:projectId/invest", async (c) => {
     console.log(`Error making investment: ${error}`);
     return c.json({ error: "Failed to make investment" }, 500);
   }
-});
+  }
+);
 
 // ==================== NOTIFICATIONS ====================
 

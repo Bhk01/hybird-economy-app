@@ -187,32 +187,27 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
 
   const handleComplete = async () => {
     setIsLoading(true);
-    console.log('ProfileOnboarding.tsx: Attempting to complete onboarding for userId:', userId);
-    const profileDataToSend = {
-      bio: data.bio,
-      location: data.location,
-      skills: data.skills,
-      jobExperiences: data.jobExperiences,
-      studyExperiences: data.studyExperiences,
-      onboardingCompleted: true,
-      profileCompleteness: calculateCompleteness()
-    };
-    console.log('ProfileOnboarding.tsx: Data being sent to userApi.updateProfile:', profileDataToSend);
     
     try {
-      const updatedProfileResponse = await userApi.updateProfile(userId, profileDataToSend);
+      const updatedProfileResponse = await userApi.updateProfile(userId, {
+        bio: data.bio,
+        location: data.location,
+        skills: data.skills,
+        jobExperiences: data.jobExperiences,
+        studyExperiences: data.studyExperiences,
+        onboardingCompleted: true,
+        profileCompleteness: calculateCompleteness()
+      });
       
       if (updatedProfileResponse.success) {
-        console.log('ProfileOnboarding.tsx: Profile update successful:', updatedProfileResponse.profile);
         setUser(updatedProfileResponse.profile); // Update user context with the new profile
         toast.success(t('onboarding.profileCompleted'));
         onComplete();
       } else {
-        console.error('ProfileOnboarding.tsx: Profile update reported as unsuccessful by API:', updatedProfileResponse.error);
         toast.error(updatedProfileResponse.error || t('onboarding.saveFailed'));
       }
     } catch (error) {
-      console.error('ProfileOnboarding.tsx: Error updating profile during onboarding:', error);
+      console.error('Error updating profile during onboarding:', error);
       toast.error(t('onboarding.saveFailed'));
     } finally {
       setIsLoading(false);

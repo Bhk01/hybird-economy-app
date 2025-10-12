@@ -39,7 +39,7 @@ import { projectsApi, InvestmentProject, walletApi } from '../utils/api';
 import { toast } from 'sonner';
 
 interface InvestmentModeProps {
-  onNavigate: (page: PageType) => void;
+  onNavigate: (page: PageType, userId?: string) => void;
 }
 
 export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
@@ -57,62 +57,10 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [aiRecommendationsActive, setAiRecommendationsActive] = useState(false);
 
-  // Load projects on component mount and create sample data if needed
+  // Load projects on component mount
   useEffect(() => {
     loadProjects();
-    // Only create sample data after a delay to ensure user is loaded
-    setTimeout(() => {
-      createSampleDataIfEmpty();
-    }, 1000);
   }, []);
-
-  const createSampleDataIfEmpty = async () => {
-    try {
-      const response = await projectsApi.getAllProjects();
-      if (response.projects.length === 0) {
-        // Create sample projects
-        const sampleProjects = [
-          {
-            title: 'EcoTech Solutions',
-            description: 'Solar panel installation service for residential and commercial clients',
-            fundingGoal: 50000,
-            minInvestment: 50,
-            expectedReturn: '15-20%',
-            riskLevel: 'Medium',
-            category: 'Tech Startup',
-            ownerId: 'sample-owner-1'
-          },
-          {
-            title: 'Artisan Coffee Roastery',
-            description: 'Local coffee roastery and café chain expansion across major Tunisian cities',
-            fundingGoal: 25000,
-            minInvestment: 25,
-            expectedReturn: '12-18%',
-            riskLevel: 'Low',
-            category: 'Food & Beverage',
-            ownerId: 'sample-owner-2'
-          },
-          {
-            title: 'Organic Farm Expansion',
-            description: 'Expanding organic vegetable farm with direct-to-consumer delivery',
-            fundingGoal: 15000,
-            minInvestment: 10,
-            expectedReturn: '10-15%',
-            riskLevel: 'Low',
-            category: 'Local Business',
-            ownerId: 'sample-owner-3'
-          }
-        ];
-
-        for (const project of sampleProjects) {
-          await projectsApi.createProject(project);
-        }
-        console.log('Sample investment projects created');
-      }
-    } catch (error) {
-      console.error('Error creating sample data:', error);
-    }
-  };
 
   const loadProjects = async () => {
     try {
@@ -400,7 +348,7 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
               ) : filteredProjects.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <p className="text-muted-foreground">No investment opportunities available at the moment.</p>
+                    <p className="text-muted-foreground mb-4">No investment opportunities available at the moment.</p>
                     <p className="text-sm text-muted-foreground mt-2">
                       Check back later for new projects!
                     </p>
@@ -496,6 +444,13 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
                           >
                             {investing === project.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             Invest Now
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => onNavigate('publicProfile', project.ownerId)}
+                          >
+                            View Owner
                           </Button>
                         </div>
                       </CardContent>

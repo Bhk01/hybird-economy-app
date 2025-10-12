@@ -33,14 +33,18 @@ import {
   DollarSign,
   Award,
   FileText,
-  Zap
+  Zap,
+  User as UserIcon,
+  Info
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
-import { skillsApi, SkillOffering, walletApi } from '../utils/api';
+import { skillsApi, SkillOffering, walletApi, SkillSwapRequest, userApi } from '../utils/api';
 import { toast } from 'sonner';
+import { ScrollArea } from './ui/scroll-area';
+import { Separator } from './ui/separator';
 
 interface SkillSwapModeProps {
-  onNavigate: (page: PageType) => void;
+  onNavigate: (page: PageType, userId?: string) => void;
 }
 
 export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
@@ -59,6 +63,10 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
   const [selectedPaidOffer, setSelectedPaidOffer] = useState<SkillOffering | null>(null);
   const [isPaying, setIsPaying] = useState(false);
   const [aiMatchingActive, setAiMatchingActive] = useState(false);
+  const [viewRequestsDialogOpen, setViewRequestsDialogOpen] = useState(false);
+  const [selectedOfferForRequests, setSelectedOfferForRequests] = useState<SkillOffering | null>(null);
+  const [viewDetailsDialogOpen, setViewDetailsDialogOpen] = useState(false);
+  const [selectedOfferForDetails, setSelectedOfferForDetails] = useState<SkillOffering | null>(null);
   
   // Form state for creating skill offerings
   const [formData, setFormData] = useState({
@@ -73,86 +81,10 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
     certificateUrl: '' // New field
   });
 
-  // Load skill offerings on component mount and create sample data if needed
+  // Load skill offerings on component mount
   useEffect(() => {
     loadSkillOfferings();
-    // Only create sample data after a delay to ensure user is loaded
-    setTimeout(() => {
-      createSampleDataIfEmpty();
-    }, 1000);
   }, []);
-
-  const createSampleDataIfEmpty = async () => {
-    try {
-      const response = await skillsApi.getAllSkills();
-      if (response.skills.length === 0) {
-        // Create sample skill offerings
-        const sampleSkills = [
-          {
-            title: 'French Tutoring ↔ Web Development',
-            description: 'Native French speaker with 5 years teaching experience. Looking to learn React development.',
-            category: 'Languages',
-            offeredBy: 'sample-user-1',
-            lookingFor: 'Programming',
-            duration: '2 hours/week',
-            isPaid: false
-          },
-          {
-            title: 'Photography ↔ Logo Design',
-            description: 'Professional photographer specializing in events and portraits. Need help with brand identity.',
-            category: 'Photography',
-            offeredBy: 'sample-user-2',
-            lookingFor: 'Design',
-            duration: '1 day session',
-            isPaid: false
-          },
-          {
-            title: 'Guitar Lessons ↔ Video Editing',
-            description: 'Professional guitarist and music teacher. Want to create better content for my music channel.',
-            category: 'Music',
-            offeredBy: 'sample-user-3',
-            lookingFor: 'Programming',
-            duration: '1 hour/lesson',
-            isPaid: false
-          },
-          {
-            title: 'Advanced React Course',
-            description: 'Learn advanced React concepts, hooks, and state management from an experienced developer.',
-            category: 'Programming',
-            offeredBy: 'sample-user-4',
-            lookingFor: 'Paid Teaching',
-            duration: '10 hours',
-            isPaid: true,
-            price: 150,
-            certificateRequired: true,
-            certificateUrl: 'https://example.com/react-cert.pdf'
-          },
-          {
-            title: 'Beginner Arabic for Travelers',
-            description: 'Interactive lessons to get you speaking basic Arabic for your next trip.',
-            category: 'Languages',
-            offeredBy: 'sample-user-5',
-            lookingFor: 'Paid Teaching',
-            duration: '5 hours',
-            isPaid: true,
-            price: 75,
-            certificateRequired: false
-          }
-        ];
-
-        for (const skill of sampleSkills) {
-          if (skill.isPaid) {
-            await skillsApi.createPaidSkillOffering(skill);
-          } else {
-            await skillsApi.createSkillOffering(skill);
-          }
-        }
-        console.log('Sample skill offerings created');
-      }
-    } catch (error) {
-      console.error('Error creating sample skill data:', error);
-    }
-  };
 
   useEffect(() => {
     if (user) {
@@ -216,6 +148,7 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
         offeredBy: user.id,
         lookingFor: formData.isPaid ? 'Paid Teaching' : formData.skillWanted,
         duration: formData.duration || 'Flexible',
+        location: formData.location || 'Online',
         isPaid: formData.isPaid,
         price: formData.isPaid ? parseFloat(formData.price as string) : null,
         certificateRequired: formData.isPaid ? formData.certificateRequired : false,
@@ -651,7 +584,7 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
               ) : filteredSkillOfferings.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <p className="text-muted-foreground">No skill swaps or paid teaching offers available at the moment.</p>
+                    <p className="text-muted-foreground mb-4">No skill swaps or paid teaching offers available at the moment.</p>
                     <Button className="mt-4" onClick={() => setDialogOpen(true)}>
                       Create the first offer
                     </Button>
@@ -662,14 +595,22 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                   <Card key={skill.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12">
+                        <Avatar 
+                          className="h-12 w-12 cursor-pointer"
+                          onClick={() => onNavigate('publicProfile', skill.offeredBy)}
+                        >
                           <AvatarFallback>
                             {skill.offeredBy.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg">User {skill.offeredBy.substring(0, 8)}</h3>
+                            <h3 
+                              className="text-lg cursor-pointer hover:underline"
+                              onClick={() => onNavigate('publicProfile', skill.offeredBy)}
+                            >
+                              User {skill.offeredBy.substring(0, 8)}
+                            </h3>
                             <Badge variant="secondary" className="text-xs">
                               {skill.status}
                             </Badge>
@@ -718,7 +659,10 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                               ) : (
                                 <Button size="sm" onClick={() => handleConnect(skill.id)}>Connect</Button>
                               )}
-                              <Button size="sm" variant="outline">View Details</Button>
+                              <Button size="sm" variant="outline" onClick={() => {
+                                setSelectedOfferForDetails(skill);
+                                setViewDetailsDialogOpen(true);
+                              }}>View Details</Button>
                             </>
                           )}
                         </div>
@@ -806,7 +750,10 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline">Edit</Button>
-                          <Button size="sm">View Requests ({offer.matches.length})</Button>
+                          <Button size="sm" onClick={() => {
+                            setSelectedOfferForRequests(offer);
+                            setViewRequestsDialogOpen(true);
+                          }}>View Requests ({offer.matches.length})</Button>
                         </div>
                       </div>
                     </CardContent>
@@ -837,14 +784,22 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                       <Card key={index}>
                         <CardContent className="p-6">
                           <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12">
+                            <Avatar 
+                              className="h-12 w-12 cursor-pointer"
+                              onClick={() => onNavigate('publicProfile', match.requesterId)}
+                            >
                               <AvatarFallback>
                                 {match.requesterId.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-lg">User {match.requesterId.substring(0, 8)}</h3>
+                                <h3 
+                                  className="text-lg cursor-pointer hover:underline"
+                                  onClick={() => onNavigate('publicProfile', match.requesterId)}
+                                >
+                                  User {match.requesterId.substring(0, 8)}
+                                </h3>
                                 <Badge className={getStatusColor(match.status)}>
                                   {match.status}
                                 </Badge>
@@ -916,6 +871,197 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                 {isPaying && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Confirm Purchase
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Requests Dialog */}
+        <Dialog open={viewRequestsDialogOpen} onOpenChange={setViewRequestsDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Requests for "{selectedOfferForRequests?.title}"</DialogTitle>
+              <DialogDescription>
+                Manage incoming requests for your skill swap offer.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {selectedOfferForRequests?.matches.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No requests for this offer yet.</p>
+                ) : (
+                  selectedOfferForRequests?.matches.map((match, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <Avatar 
+                            className="h-10 w-10 cursor-pointer"
+                            onClick={() => onNavigate('publicProfile', match.requesterId)}
+                          >
+                            <AvatarFallback>
+                              {match.requesterId.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h4 
+                              className="font-medium cursor-pointer hover:underline"
+                              onClick={() => onNavigate('publicProfile', match.requesterId)}
+                            >
+                              User {match.requesterId.substring(0, 8)}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">{match.message}</p>
+                            {match.offerInReturn && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Offering in return: {match.offerInReturn}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Requested: {new Date(match.requestedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            {match.status === 'pending' && (
+                              <>
+                                <Button size="sm" variant="outline">Decline</Button>
+                                <Button size="sm">Accept</Button>
+                              </>
+                            )}
+                            {match.status === 'accepted' && (
+                              <Badge className="bg-green-500/10 text-green-500">Accepted</Badge>
+                            )}
+                            {match.status === 'declined' && (
+                              <Badge variant="destructive">Declined</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewRequestsDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Details Dialog */}
+        <Dialog open={viewDetailsDialogOpen} onOpenChange={setViewDetailsDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Skill Offer Details</DialogTitle>
+              <DialogDescription>
+                Detailed information about this skill swap or paid teaching offer.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[400px] pr-4">
+              {selectedOfferForDetails && (
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar 
+                          className="h-12 w-12 cursor-pointer"
+                          onClick={() => onNavigate('publicProfile', selectedOfferForDetails.offeredBy)}
+                        >
+                          <AvatarFallback>
+                            {selectedOfferForDetails.offeredBy.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h4 
+                            className="font-medium cursor-pointer hover:underline"
+                            onClick={() => onNavigate('publicProfile', selectedOfferForDetails.offeredBy)}
+                          >
+                            Offered by User {selectedOfferForDetails.offeredBy.substring(0, 8)}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">Created: {new Date(selectedOfferForDetails.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium">Title:</h4>
+                        <p className="text-muted-foreground">{selectedOfferForDetails.title}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Description:</h4>
+                        <p className="text-muted-foreground whitespace-pre-wrap">{selectedOfferForDetails.description}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium">Category:</h4>
+                          <Badge variant="outline">{selectedOfferForDetails.category}</Badge>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Looking For:</h4>
+                          <Badge variant="outline">{selectedOfferForDetails.lookingFor}</Badge>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Duration:</h4>
+                          <Badge variant="secondary">{selectedOfferForDetails.duration}</Badge>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Location:</h4>
+                          <Badge variant="secondary">{selectedOfferForDetails.location}</Badge>
+                        </div>
+                      </div>
+                      {selectedOfferForDetails.isPaid && (
+                        <>
+                          <Separator />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium">Price:</h4>
+                              <p className="text-green-600 font-semibold">{selectedOfferForDetails.price} TND</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium">Certificate Required:</h4>
+                              <Badge variant={selectedOfferForDetails.certificateRequired ? 'default' : 'outline'}>
+                                {selectedOfferForDetails.certificateRequired ? 'Yes' : 'No'}
+                              </Badge>
+                            </div>
+                          </div>
+                          {selectedOfferForDetails.certificateUrl && (
+                            <div>
+                              <h4 className="font-medium">Certificate URL:</h4>
+                              <a 
+                                href={selectedOfferForDetails.certificateUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-blue-500 hover:underline flex items-center gap-1 text-sm"
+                              >
+                                View Certificate <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium">Status:</h4>
+                        <Badge className={getStatusColor(selectedOfferForDetails.status)}>
+                          {selectedOfferForDetails.status}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Total Requests:</h4>
+                        <p className="text-muted-foreground">{selectedOfferForDetails.matches.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewDetailsDialogOpen(false)}>Close</Button>
+              {selectedOfferForDetails && selectedOfferForDetails.offeredBy !== user?.id && (
+                selectedOfferForDetails.isPaid ? (
+                  <Button onClick={() => handleBuySkill(selectedOfferForDetails)}>
+                    Buy for {selectedOfferForDetails.price} TND
+                  </Button>
+                ) : (
+                  <Button onClick={() => handleConnect(selectedOfferForDetails.id)}>Connect</Button>
+                )
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

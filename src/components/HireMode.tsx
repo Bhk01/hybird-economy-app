@@ -33,7 +33,7 @@ import { PageType, useUser } from '../App';
 import { Job, jobsApi } from '../utils/api';
 
 interface HireModeProps {
-  onNavigate: (page: PageType) => void;
+  onNavigate: (page: PageType, userId?: string) => void;
 }
 
 export function HireMode({ onNavigate }: HireModeProps) {
@@ -405,6 +405,13 @@ export function HireMode({ onNavigate }: HireModeProps) {
                             disabled={job.applicants.some(app => app.freelancerId === user?.id)}
                           >
                             {job.applicants.some(app => app.freelancerId === user?.id) ? 'Applied' : 'Apply Now'}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => onNavigate('publicProfile', job.employerId)}
+                          >
+                            View Employer
                           </Button>
                         </div>
                       </div>

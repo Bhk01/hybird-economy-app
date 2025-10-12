@@ -91,7 +91,7 @@ async function mockApiRequest<T = any>(
         setLocalStorageItem(`user:${userId}`, {
           id: userId, name, email, bio: "", skills: [], avatar: "", location: "", rating: 0, completedJobs: 0, totalEarnings: 0,
           createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp(), onboardingCompleted: false, profileCompleteness: 0,
-          jobExperiences: [], studyExperiences: [], certifications: [], servicesOffered: []
+          jobExperiences: [], studyExperiences: [], certifications: [], servicesOffered: [], reviews: []
         });
         setLocalStorageItem(`wallet:${userId}`, { money: 0, credits: 20, equity: 0 });
         result = { success: true, user: { id: userId, name, email }, message: "Account created successfully" };
@@ -121,7 +121,8 @@ async function mockApiRequest<T = any>(
           jobExperiences: rest.jobExperiences || existingProfile?.jobExperiences || [],
           studyExperiences: rest.studyExperiences || existingProfile?.studyExperiences || [],
           certifications: rest.certifications || existingProfile?.certifications || [],
-          servicesOffered: rest.servicesOffered || existingProfile?.servicesOffered || []
+          servicesOffered: rest.servicesOffered || existingProfile?.servicesOffered || [],
+          reviews: existingProfile?.reviews || []
         };
         setLocalStorageItem(`user:${newUserId}`, profile);
         result = { success: true, profile };
@@ -135,6 +136,14 @@ async function mockApiRequest<T = any>(
         profile = { ...profile, ...data, updatedAt: getCurrentTimestamp() };
         setLocalStorageItem(`user:${userId}`, profile);
         result = { success: true, profile };
+      } else if (endpoint === `/users/${userId}/block` && method === 'POST') {
+        // Simulate blocking user
+        console.log(`User ${data.blockerId} blocked user ${userId}`);
+        result = { success: true, message: "User blocked successfully" };
+      } else if (endpoint === `/users/${userId}/report` && method === 'POST') {
+        // Simulate reporting user
+        console.log(`User ${data.reporterId} reported user ${userId} for reason: ${data.reason}`);
+        result = { success: true, message: "User reported successfully" };
       }
     } else if (endpoint.startsWith('/wallet')) {
       const userId = endpoint.split('/')[2];
@@ -256,6 +265,29 @@ async function mockApiRequest<T = any>(
         }
         result = { success: true, message: `Marked ${updatedCount} notifications as read`, updatedCount };
       }
+    } else if (endpoint.startsWith('/reviews')) {
+      const targetUserId = endpoint.split('/')[2];
+      if (endpoint === `/reviews/${targetUserId}` && method === 'GET') {
+        const reviews = getAllLocalStorageItems<Review>('review:').filter(r => r.targetUserId === targetUserId);
+        result = { reviews };
+      } else if (endpoint === `/reviews/${targetUserId}/add` && method === 'POST') {
+        const { reviewerId, rating, comment } = data;
+        if (!reviewerId || !rating || !comment) throw new Error("Missing required fields for review");
+        const review: Review = { id: generateId(), targetUserId, reviewerId, rating, comment, createdAt: getCurrentTimestamp() };
+        setLocalStorageItem(`review:${review.id}`, review);
+
+        // Update target user's average rating and review count
+        let targetProfile = getLocalStorageItem(`user:${targetUserId}`, null);
+        if (targetProfile) {
+          const allReviewsForTarget = getAllLocalStorageItems<Review>('review:').filter(r => r.targetUserId === targetUserId);
+          const totalRating = allReviewsForTarget.reduce((sum, r) => sum + r.rating, 0);
+          targetProfile.rating = totalRating / allReviewsForTarget.length;
+          // Assuming reviews are stored directly in profile for simplicity
+          targetProfile.reviews = allReviewsForTarget;
+          setLocalStorageItem(`user:${targetUserId}`, targetProfile);
+        }
+        result = { success: true, review };
+      }
     } else if (endpoint === '/health' && method === 'GET') {
       result = { status: 'ok', timestamp: getCurrentTimestamp(), message: 'Work & Invest Mock API is running' };
     }
@@ -307,6 +339,15 @@ export interface Service {
   rating: number;
 }
 
+export interface Review {
+  id: string;
+  targetUserId: string;
+  reviewerId: string;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -324,8 +365,9 @@ export interface UserProfile {
   profileCompleteness?: number;
   jobExperiences?: JobExperience[];
   studyExperiences?: StudyExperience[];
-  certifications?: Certification[]; // New field
-  servicesOffered?: Service[]; // New field
+  certifications?: Certification[];
+  servicesOffered?: Service[];
+  reviews?: Review[]; // Added reviews to UserProfile
 }
 
 export const userApi = {
@@ -337,6 +379,12 @@ export const userApi = {
 
   updateProfile: (userId: string, profileData: Partial<UserProfile>) =>
     mockApiRequest<{ profile: UserProfile }>(`/users/${userId}/profile`, 'PUT', profileData),
+
+  blockUser: (targetUserId: string, blockerId: string) =>
+    mockApiRequest<{ success: boolean; message: string }>(`/users/${targetUserId}/block`, 'POST', { blockerId }),
+
+  reportUser: (targetUserId: string, reporterId: string, reason: string) =>
+    mockApiRequest<{ success: boolean; message: string }>(`/users/${targetUserId}/report`, 'POST', { reporterId, reason }),
 };
 
 // ==================== WALLET API ====================
@@ -509,6 +557,16 @@ export const notificationsApi = {
     mockApiRequest<{ success: boolean; message: string; updatedCount: number }>(`/notifications/${userId}/mark-all-read`, 'PUT'),
 };
 
+// ==================== REVIEWS API ====================
+
+export const reviewsApi = {
+  addReview: (targetUserId: string, reviewerId: string, rating: number, comment: string) =>
+    mockApiRequest<{ success: boolean; review: Review }>(`/reviews/${targetUserId}/add`, 'POST', { reviewerId, rating, comment }),
+  
+  getReviewsForUser: (targetUserId: string) =>
+    mockApiRequest<{ reviews: Review[] }>(`/reviews/${targetUserId}`),
+};
+
 // ==================== AUTH API ====================
 
 export const authApi = {
@@ -528,16 +586,195 @@ export const healthCheck = () =>
 export const mockBackend = {
   clearAllData: clearAllLocalStorage,
   getAllItems: getAllLocalStorageItems,
-  setInitialData: () => {
-    // This function can be called once to populate initial data if needed
-    // For now, individual API calls will create data if not found.
-    // Example:
-    // if (!getLocalStorageItem('auth:demo@workandinvest.com', null)) {
-    //   const demoUserId = generateId();
-    //   setLocalStorageItem('auth:demo@workandinvest.com', { id: demoUserId, email: 'demo@workandinvest.com', password: 'demo123', createdAt: getCurrentTimestamp() });
-    //   setLocalStorageItem(`user:${demoUserId}`, { id: demoUserId, name: 'Demo User', email: 'demo@workandinvest.com', bio: 'This is a demo profile.', skills: ['React', 'Design'], location: 'Tunis', rating: 4.5, completedJobs: 5, totalEarnings: 1200, createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp(), onboardingCompleted: true, profileCompleteness: 100 });
-    //   setLocalStorageItem(`wallet:${demoUserId}`, { money: 1000, credits: 50, equity: 200 });
-    //   toast.info('Demo user created in local storage!');
-    // }
+  setInitialData: async () => {
+    const mockDataInitialized = getLocalStorageItem('mockDataInitialized', false);
+    if (!mockDataInitialized) {
+      console.log('Initializing mock data...');
+      
+      // Create demo user
+      const demoEmail = 'demo@workandinvest.com';
+      const demoPassword = 'demo123';
+      const demoName = 'Demo User';
+      const demoUserId = generateId(); // Generate a consistent ID for demo user
+
+      // Manually set auth and user profile for demo user
+      setLocalStorageItem(`auth:${demoEmail}`, { id: demoUserId, email: demoEmail, password: demoPassword, createdAt: getCurrentTimestamp() });
+      setLocalStorageItem(`user:${demoUserId}`, {
+        id: demoUserId,
+        name: demoName,
+        email: demoEmail,
+        bio: 'Experienced full-stack developer and passionate investor. Always looking for new challenges and opportunities to grow.',
+        skills: ['React', 'TypeScript', 'Node.js', 'UI/UX Design', 'Financial Analysis'],
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cfdfeeab?w=800&q=80',
+        location: 'Tunis, Tunisia',
+        rating: 4.8,
+        completedJobs: 15,
+        totalEarnings: 3500,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 * 6).toISOString(), // 6 months ago
+        updatedAt: getCurrentTimestamp(),
+        onboardingCompleted: true,
+        profileCompleteness: 100,
+        jobExperiences: [
+          { id: generateId(), title: 'Senior Software Engineer', company: 'Tech Innovations', startDate: '2020-01-01', endDate: null, description: 'Led development of key features.' },
+          { id: generateId(), title: 'Junior Developer', company: 'Startup Solutions', startDate: '2018-06-01', endDate: '2019-12-31', description: 'Developed and maintained web applications.' }
+        ],
+        studyExperiences: [
+          { id: generateId(), degree: 'Master of Computer Science', institution: 'University of Tunis', startDate: '2016-09-01', endDate: '2018-06-30', description: 'Specialized in AI and Machine Learning.' }
+        ],
+        certifications: [
+          { id: generateId(), name: 'AWS Certified Developer', issuer: 'Amazon Web Services', date: '2021-03-15' },
+          { id: generateId(), name: 'Google Project Management', issuer: 'Coursera', date: '2022-07-01' }
+        ],
+        servicesOffered: [
+          { id: generateId(), name: 'Custom Web Development', price: '50-100 TND/hour', rating: 4.9 },
+          { id: generateId(), name: 'UI/UX Design Consultation', price: '75 TND/session', rating: 4.7 }
+        ],
+        reviews: [
+          { id: generateId(), targetUserId: demoUserId, reviewerId: 'reviewer-1', rating: 5, comment: 'Excellent work! Delivered exactly what we needed on time and within budget. Great communication throughout the project.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString() },
+          { id: generateId(), targetUserId: demoUserId, reviewerId: 'reviewer-2', rating: 4, comment: 'Good developer, a bit slow on responses but quality work.', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString() }
+        ]
+      });
+      setLocalStorageItem(`wallet:${demoUserId}`, { money: 1000, credits: 50, equity: 200 });
+
+      // Create sample skill offerings
+      const sampleSkills = [
+        {
+          title: 'French Tutoring ↔ Web Development',
+          description: 'Native French speaker with 5 years teaching experience. Looking to learn React development.',
+          category: 'Languages',
+          offeredBy: demoUserId, // Offered by demo user
+          lookingFor: 'Programming',
+          duration: '2 hours/week',
+          isPaid: false,
+          status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          title: 'Photography ↔ Logo Design',
+          description: 'Professional photographer specializing in events and portraits. Need help with brand identity.',
+          category: 'Photography',
+          offeredBy: 'sample-user-2',
+          lookingFor: 'Design',
+          duration: '1 day session',
+          isPaid: false,
+          status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          title: 'Guitar Lessons ↔ Video Editing',
+          description: 'Professional guitarist and music teacher. Want to create better content for my music channel.',
+          category: 'Music',
+          offeredBy: 'sample-user-3',
+          lookingFor: 'Programming',
+          duration: '1 hour/lesson',
+          isPaid: false,
+          status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          title: 'Advanced React Course',
+          description: 'Learn advanced React concepts, hooks, and state management from an experienced developer.',
+          category: 'Programming',
+          offeredBy: 'sample-user-4',
+          lookingFor: 'Paid Teaching',
+          duration: '10 hours',
+          isPaid: true,
+          price: 150,
+          certificateRequired: true,
+          certificateUrl: 'https://example.com/react-cert.pdf',
+          status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          title: 'Beginner Arabic for Travelers',
+          description: 'Interactive lessons to get you speaking basic Arabic for your next trip.',
+          category: 'Languages',
+          offeredBy: 'sample-user-5',
+          lookingFor: 'Paid Teaching',
+          duration: '5 hours',
+          isPaid: true,
+          price: 75,
+          certificateRequired: false,
+          status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        }
+      ];
+      for (const skill of sampleSkills) {
+        setLocalStorageItem(`skill:${skill.id}`, skill);
+      }
+
+      // Create sample investment projects
+      const sampleProjects = [
+        {
+          id: generateId(),
+          title: 'EcoTech Solutions',
+          description: 'Solar panel installation service for residential and commercial clients',
+          fundingGoal: 50000,
+          currentFunding: 15000,
+          minInvestment: 50,
+          expectedReturn: '15-20%',
+          riskLevel: 'Medium',
+          category: 'Tech Startup',
+          ownerId: 'sample-owner-1',
+          status: 'funding', investors: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          id: generateId(),
+          title: 'Artisan Coffee Roastery',
+          description: 'Local coffee roastery and café chain expansion across major Tunisian cities',
+          fundingGoal: 25000,
+          currentFunding: 8000,
+          minInvestment: 25,
+          expectedReturn: '12-18%',
+          riskLevel: 'Low',
+          category: 'Food & Beverage',
+          ownerId: 'sample-owner-2',
+          status: 'funding', investors: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          id: generateId(),
+          title: 'Organic Farm Expansion',
+          description: 'Expanding organic vegetable farm with direct-to-consumer delivery',
+          fundingGoal: 15000,
+          currentFunding: 5000,
+          minInvestment: 10,
+          expectedReturn: '10-15%',
+          riskLevel: 'Low',
+          category: 'Local Business',
+          ownerId: 'sample-owner-3',
+          status: 'funding', investors: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        }
+      ];
+      for (const project of sampleProjects) {
+        setLocalStorageItem(`project:${project.id}`, project);
+      }
+
+      // Create sample jobs
+      const sampleJobs = [
+        {
+          id: generateId(),
+          title: 'Website Redesign',
+          description: 'Looking for a talented designer to revamp our company website.',
+          budget: 1200,
+          deadline: '2024-12-31',
+          skills: ['UI/UX Design', 'Figma', 'Web Design'],
+          employerId: 'sample-employer-1',
+          status: 'open', applicants: [], selectedFreelancer: null, createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        },
+        {
+          id: generateId(),
+          title: 'Mobile App Development',
+          description: 'Need an experienced developer to build an iOS and Android app.',
+          budget: 5000,
+          deadline: '2025-03-15',
+          skills: ['React Native', 'Mobile Development', 'API Integration'],
+          employerId: 'sample-employer-2',
+          status: 'open', applicants: [], selectedFreelancer: null, createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp()
+        }
+      ];
+      for (const job of sampleJobs) {
+        setLocalStorageItem(`job:${job.id}`, job);
+      }
+
+      setLocalStorageItem('mockDataInitialized', true);
+      console.log('Mock data initialization complete.');
+    } else {
+      console.log('Mock data already initialized.');
+    }
   }
 };

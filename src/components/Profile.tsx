@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { useI18n } from '../utils/i18n';
-import { userApi, Certification, Service, JobExperience, StudyExperience } from '../utils/api';
+import { userApi, Certification, Service, JobExperience, StudyExperience, Review } from '../utils/api';
 
 interface ProfileProps {
   onNavigate: (page: PageType) => void;
@@ -72,8 +72,9 @@ export function Profile({ onNavigate }: ProfileProps) {
     skills: [] as string[],
     jobExperiences: [] as JobExperience[],
     studyExperiences: [] as StudyExperience[],
-    certifications: [] as Certification[], // New field
-    servicesOffered: [] as Service[], // New field
+    certifications: [] as Certification[],
+    servicesOffered: [] as Service[],
+    reviews: [] as Review[], // Added reviews to editedData
   });
   
   const [originalData, setOriginalData] = useState({ ...editedData });
@@ -92,8 +93,9 @@ export function Profile({ onNavigate }: ProfileProps) {
         skills: user.skills || [],
         jobExperiences: user.jobExperiences || [],
         studyExperiences: user.studyExperiences || [],
-        certifications: user.certifications || [], // Initialize new field
-        servicesOffered: user.servicesOffered || [], // Initialize new field
+        certifications: user.certifications || [],
+        servicesOffered: user.servicesOffered || [],
+        reviews: user.reviews || [] // Initialize reviews
       };
       setEditedData(initialData);
       setOriginalData(initialData);
@@ -113,7 +115,7 @@ export function Profile({ onNavigate }: ProfileProps) {
     location: editedData.location,
     joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently',
     rating: user?.rating || 0, // Dynamically set from user context
-    reviewCount: 0, // Set to 0 for new users, would be dynamic from reviews API
+    reviewCount: user?.reviews?.length || 0, // Dynamically set from user context
     completedJobs: user?.completedJobs || 0, // Dynamically set from user context
     activeProjects: 0, // Set to 0 for new users, would be dynamic from jobs/projects API
     skillCredits: wallet?.credits || 0, // Dynamically set from wallet context
@@ -177,8 +179,9 @@ export function Profile({ onNavigate }: ProfileProps) {
         skills: editedData.skills,
         jobExperiences: editedData.jobExperiences,
         studyExperiences: editedData.studyExperiences,
-        certifications: editedData.certifications, // Save new field
-        servicesOffered: editedData.servicesOffered, // Save new field
+        certifications: editedData.certifications,
+        servicesOffered: editedData.servicesOffered,
+        reviews: editedData.reviews // Save reviews
       });
       setUser(updatedProfile.profile); // Update user context
       setOriginalData({ ...editedData });
@@ -750,31 +753,42 @@ export function Profile({ onNavigate }: ProfileProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Placeholder for reviews */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback>SB</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h4 className="text-sm">Sarah B.</h4>
-                              <p className="text-xs text-muted-foreground">E-commerce Website</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-1 mb-1">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <Star key={i} className="h-3 w-3 fill-current text-yellow-500" />
-                                ))}
+                    {editedData.reviews.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>{t('profile.noReviewsYet')}</p>
+                        <p className="text-sm">{t('profile.noReviewsDesc')}</p>
+                      </div>
+                    ) : (
+                      editedData.reviews.map((review) => (
+                        <div key={review.id} className="border rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>{review.reviewerId.substring(0,2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <h4 className="text-sm">User {review.reviewerId.substring(0,8)}</h4>
+                                  <p className="text-xs text-muted-foreground">Reviewed on {new Date(review.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div className="text-right">
+                                  <div className="flex items-center gap-1 mb-1">
+                                    {Array.from({ length: review.rating }).map((_, i) => (
+                                      <Star key={i} className="h-3 w-3 fill-current text-yellow-500" />
+                                    ))}
+                                    {Array.from({ length: 5 - review.rating }).map((_, i) => (
+                                      <Star key={i} className="h-3 w-3 text-muted-foreground" />
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-xs text-muted-foreground">2 days ago</p>
+                              <p className="text-sm text-muted-foreground">{review.comment}</p>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">Excellent work! Delivered exactly what we needed on time and within budget. Great communication throughout the project.</p>
                         </div>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

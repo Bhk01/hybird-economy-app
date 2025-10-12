@@ -35,7 +35,7 @@ import {
   FileText,
   Zap,
   User as UserIcon,
-  Info
+  ExternalLink
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { skillsApi, SkillOffering, walletApi, SkillSwapRequest, userApi } from '../utils/api';
@@ -305,7 +305,7 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-500 bg-green-500/10';
+      case 'available': return 'text-green-500 bg-green-500/10';
       case 'matched': return 'text-blue-500 bg-blue-500/10';
       case 'pending': return 'text-yellow-500 bg-yellow-500/10';
       default: return 'text-gray-500 bg-gray-500/10';

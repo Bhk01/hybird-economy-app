@@ -112,12 +112,12 @@ export function Profile({ onNavigate }: ProfileProps) {
     title: 'Work & Invest Member',
     location: editedData.location,
     joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently',
-    rating: user?.rating || 4.8,
-    reviewCount: 12,
-    completedJobs: user?.completedJobs || 0,
-    activeProjects: 3,
-    skillCredits: wallet?.credits || 0,
-    totalEarnings: user?.totalEarnings || 0,
+    rating: user?.rating || 0, // Dynamically set from user context
+    reviewCount: 0, // Set to 0 for new users, would be dynamic from reviews API
+    completedJobs: user?.completedJobs || 0, // Dynamically set from user context
+    activeProjects: 0, // Set to 0 for new users, would be dynamic from jobs/projects API
+    skillCredits: wallet?.credits || 0, // Dynamically set from wallet context
+    totalEarnings: user?.totalEarnings || 0, // Dynamically set from user context
     bio: editedData.bio,
     phone: editedData.phone,
     email: editedData.email,
@@ -348,7 +348,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     </div>
                     <div className="flex items-center justify-center gap-2 mb-4">
                       <Star className="h-4 w-4 fill-current text-yellow-500" />
-                      <span>{profileData.rating}</span>
+                      <span>{profileData.rating.toFixed(1)}</span> {/* Use dynamic rating */}
                       <span className="text-muted-foreground">({profileData.reviewCount} reviews)</span>
                     </div>
                     <div className="flex gap-2">

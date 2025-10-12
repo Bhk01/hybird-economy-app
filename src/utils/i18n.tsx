@@ -350,7 +350,27 @@ const translations: Record<Language, TranslationData> = {
       addExperience: 'Add Experience',
       addEducation: 'Add Education',
       noJobExperience: 'No job experiences added yet.',
-      noStudyExperience: 'No study experiences added yet.'
+      noStudyExperience: 'No study experiences added yet.',
+      certificationsTitle: 'Certifications', // New
+      certificationsDescription: 'Showcase your professional certifications and achievements.', // New
+      addCertification: 'Add Certification', // New
+      noCertifications: 'No certifications added yet.', // New
+      certificationName: 'Certification Name', // New
+      certificationNamePlaceholder: 'e.g., Google Project Management Certificate', // New
+      issuer: 'Issuer', // New
+      issuerPlaceholder: 'e.g., Google, Coursera', // New
+      dateIssued: 'Date Issued', // New
+      certificationRequiredFields: 'Please fill in certification name, issuer, and date issued.', // New
+      servicesOfferedTitle: 'Services I Offer', // New
+      servicesOfferedDescription: 'List the services you provide to clients.', // New
+      addService: 'Add Service', // New
+      noServicesOffered: 'No services offered yet.', // New
+      serviceName: 'Service Name', // New
+      serviceNamePlaceholder: 'e.g., Custom Web Development', // New
+      servicePrice: 'Price/Rate', // New
+      servicePricePlaceholder: 'e.g., 50 TND/hour, 200-500 TND/project', // New
+      serviceRequiredFields: 'Please fill in service name and price/rate.', // New
+      addSkillPlaceholder: 'e.g., React, Photoshop' // New
     },
     // Wallet
     wallet: {
@@ -384,6 +404,33 @@ const translations: Record<Language, TranslationData> = {
       deleteSuccess: 'Notification deleted',
       markReadSuccess: 'All notifications marked as read',
       loadError: 'Failed to load notifications'
+    },
+    // Skill Swap Mode
+    skillSwap: {
+      paidTeaching: 'Paid Teaching', // New
+      sellSkill: 'Sell Skill', // New
+      pricePerSession: 'Price per Session', // New
+      certificateRequired: 'Certificate Required?', // New
+      certificateUrl: 'Certificate URL', // New
+      confirmPurchase: 'Confirm Purchase', // New
+      offerDetails: 'Offer Details', // New
+      skill: 'Skill', // New
+      price: 'Price', // New
+      yourBalance: 'Your Balance', // New
+      deductionWarning: 'By confirming, {{price}} TND will be deducted from your wallet.', // New
+      insufficientFunds: 'Insufficient funds in your wallet. Please top up.', // New
+      invalidPurchase: 'Invalid purchase request.', // New
+      purchaseSuccess: 'Successfully purchased "{{title}}" for {{price}} TND!', // New
+      purchaseFailed: 'Failed to complete purchase.', // New
+      cannotPurchaseOwnSkill: 'You cannot purchase your own skill offer.', // New
+      aiMatch: 'AI Match', // New
+      aiMatchDescription: 'Find skill swaps that best match your profile and learning goals.', // New
+      createPaidOffer: 'Create Paid Teaching Offer', // New
+      createFreeSwap: 'Create Free Skill Swap', // New
+      offerAsPaidTeaching: 'Offer as Paid Teaching?', // New
+      specifySkillWanted: 'Please specify a skill you want to learn for a free swap.', // New
+      enterValidPrice: 'Please enter a valid price for your paid teaching offer.', // New
+      provideCertificateUrl: 'Please provide a certificate URL if certificate is required.' // New
     }
   },
   ar: {
@@ -718,7 +765,27 @@ const translations: Record<Language, TranslationData> = {
       addExperience: 'إضافة خبرة',
       addEducation: 'إضافة تعليم',
       noJobExperience: 'لم يتم إضافة أي خبرات عمل بعد.',
-      noStudyExperience: 'لم يتم إضافة أي خبرات دراسية بعد.'
+      noStudyExperience: 'لم يتم إضافة أي خبرات دراسية بعد.',
+      certificationsTitle: 'الشهادات', // New
+      certificationsDescription: 'اعرض شهاداتك وإنجازاتك المهنية.', // New
+      addCertification: 'إضافة شهادة', // New
+      noCertifications: 'لم يتم إضافة أي شهادات بعد.', // New
+      certificationName: 'اسم الشهادة', // New
+      certificationNamePlaceholder: 'مثال: شهادة إدارة مشاريع جوجل', // New
+      issuer: 'الجهة المصدرة', // New
+      issuerPlaceholder: 'مثال: جوجل، كورسيرا', // New
+      dateIssued: 'تاريخ الإصدار', // New
+      certificationRequiredFields: 'يرجى ملء اسم الشهادة والجهة المصدرة وتاريخ الإصدار.', // New
+      servicesOfferedTitle: 'الخدمات التي أقدمها', // New
+      servicesOfferedDescription: 'قائمة بالخدمات التي تقدمها للعملاء.', // New
+      addService: 'إضافة خدمة', // New
+      noServicesOffered: 'لم يتم تقديم أي خدمات بعد.', // New
+      serviceName: 'اسم الخدمة', // New
+      serviceNamePlaceholder: 'مثال: تطوير مواقع ويب مخصصة', // New
+      servicePrice: 'السعر/المعدل', // New
+      servicePricePlaceholder: 'مثال: 50 دينار/ساعة، 200-500 دينار/مشروع', // New
+      serviceRequiredFields: 'يرجى ملء اسم الخدمة والسعر/المعدل.', // New
+      addSkillPlaceholder: 'مثال: React, Photoshop' // New
     },
     // Wallet
     wallet: {
@@ -752,6 +819,33 @@ const translations: Record<Language, TranslationData> = {
       deleteSuccess: 'تم حذف الإشعار',
       markReadSuccess: 'تم تحديد جميع الإشعارات كمقروءة',
       loadError: 'فشل في تحميل الإشعارات'
+    },
+    // Skill Swap Mode
+    skillSwap: {
+      paidTeaching: 'تدريس مدفوع', // New
+      sellSkill: 'بيع مهارة', // New
+      pricePerSession: 'السعر لكل جلسة', // New
+      certificateRequired: 'شهادة مطلوبة؟', // New
+      certificateUrl: 'رابط الشهادة', // New
+      confirmPurchase: 'تأكيد الشراء', // New
+      offerDetails: 'تفاصيل العرض', // New
+      skill: 'المهارة', // New
+      price: 'السعر', // New
+      yourBalance: 'رصيدك', // New
+      deductionWarning: 'بتأكيدك، سيتم خصم {{price}} دينار من محفظتك.', // New
+      insufficientFunds: 'رصيد غير كاف في محفظتك. يرجى إعادة الشحن.', // New
+      invalidPurchase: 'طلب شراء غير صالح.', // New
+      purchaseSuccess: 'تم شراء "{{title}}" بنجاح مقابل {{price}} دينار!', // New
+      purchaseFailed: 'فشل إتمام عملية الشراء.', // New
+      cannotPurchaseOwnSkill: 'لا يمكنك شراء عرض مهارتك الخاص.', // New
+      aiMatch: 'مطابقة بالذكاء الاصطناعي', // New
+      aiMatchDescription: 'ابحث عن تبادلات المهارات التي تتناسب بشكل أفضل مع ملفك الشخصي وأهدافك التعليمية.', // New
+      createPaidOffer: 'إنشاء عرض تدريس مدفوع', // New
+      createFreeSwap: 'إنشاء تبادل مهارات مجاني', // New
+      offerAsPaidTeaching: 'عرض كتدريس مدفوع؟', // New
+      specifySkillWanted: 'يرجى تحديد المهارة التي ترغب في تعلمها لتبادل مجاني.', // New
+      enterValidPrice: 'يرجى إدخال سعر صالح لعرض التدريس المدفوع الخاص بك.', // New
+      provideCertificateUrl: 'يرجى تقديم رابط الشهادة إذا كانت الشهادة مطلوبة.' // New
     }
   },
   fr: {
@@ -1086,7 +1180,27 @@ const translations: Record<Language, TranslationData> = {
       addExperience: 'Ajouter une expérience',
       addEducation: 'Ajouter une formation',
       noJobExperience: 'Aucune expérience professionnelle ajoutée pour le moment.',
-      noStudyExperience: 'Aucune expérience scolaire ajoutée pour le moment.'
+      noStudyExperience: 'Aucune expérience scolaire ajoutée pour le moment.',
+      certificationsTitle: 'Certifications', // New
+      certificationsDescription: 'Présentez vos certifications et réalisations professionnelles.', // New
+      addCertification: 'Ajouter une certification', // New
+      noCertifications: 'Aucune certification ajoutée pour le moment.', // New
+      certificationName: 'Nom de la certification', // New
+      certificationNamePlaceholder: 'ex: Certificat de gestion de projet Google', // New
+      issuer: 'Émetteur', // New
+      issuerPlaceholder: 'ex: Google, Coursera', // New
+      dateIssued: 'Date d\'émission', // New
+      certificationRequiredFields: 'Veuillez remplir le nom de la certification, l\'émetteur et la date d\'émission.', // New
+      servicesOfferedTitle: 'Services que j\'offre', // New
+      servicesOfferedDescription: 'Listez les services que vous proposez à vos clients.', // New
+      addService: 'Ajouter un service', // New
+      noServicesOffered: 'Aucun service proposé pour le moment.', // New
+      serviceName: 'Nom du service', // New
+      serviceNamePlaceholder: 'ex: Développement Web personnalisé', // New
+      servicePrice: 'Prix/Tarif', // New
+      servicePricePlaceholder: 'ex: 50 TND/heure, 200-500 TND/projet', // New
+      serviceRequiredFields: 'Veuillez remplir le nom du service et le prix/tarif.', // New
+      addSkillPlaceholder: 'ex: React, Photoshop' // New
     },
     // Wallet
     wallet: {
@@ -1120,6 +1234,33 @@ const translations: Record<Language, TranslationData> = {
       deleteSuccess: 'Notification supprimée',
       markReadSuccess: 'Toutes les notifications marquées comme lues',
       loadError: 'Échec du chargement des notifications'
+    },
+    // Skill Swap Mode
+    skillSwap: {
+      paidTeaching: 'Enseignement payant', // New
+      sellSkill: 'Vendre une compétence', // New
+      pricePerSession: 'Prix par session', // New
+      certificateRequired: 'Certificat requis?', // New
+      certificateUrl: 'URL du certificat', // New
+      confirmPurchase: 'Confirmer l\'achat', // New
+      offerDetails: 'Détails de l\'offre', // New
+      skill: 'Compétence', // New
+      price: 'Prix', // New
+      yourBalance: 'Votre solde', // New
+      deductionWarning: 'En confirmant, {{price}} TND seront déduits de votre portefeuille.', // New
+      insufficientFunds: 'Fonds insuffisants dans votre portefeuille. Veuillez recharger.', // New
+      invalidPurchase: 'Demande d\'achat invalide.', // New
+      purchaseSuccess: 'Achat de "{{title}}" réussi pour {{price}} TND!', // New
+      purchaseFailed: 'Échec de l\'achat.', // New
+      cannotPurchaseOwnSkill: 'Vous ne pouvez pas acheter votre propre offre de compétence.', // New
+      aiMatch: 'Correspondance IA', // New
+      aiMatchDescription: 'Trouvez les échanges de compétences qui correspondent le mieux à votre profil et à vos objectifs d\'apprentissage.', // New
+      createPaidOffer: 'Créer une offre d\'enseignement payant', // New
+      createFreeSwap: 'Créer un échange de compétences gratuit', // New
+      offerAsPaidTeaching: 'Proposer comme enseignement payant?', // New
+      specifySkillWanted: 'Veuillez spécifier une compétence que vous souhaitez apprendre pour un échange gratuit.', // New
+      enterValidPrice: 'Veuillez entrer un prix valide pour votre offre d\'enseignement payant.', // New
+      provideCertificateUrl: 'Veuillez fournir une URL de certificat si un certificat est requis.' // New
     }
   }
 };

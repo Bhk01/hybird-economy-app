@@ -31,7 +31,8 @@ import {
   Car,
   Building,
   Loader2,
-  Plus
+  Plus,
+  Zap
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { projectsApi, InvestmentProject, walletApi } from '../utils/api';
@@ -54,6 +55,7 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
   const [selectedProject, setSelectedProject] = useState<InvestmentProject | null>(null);
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
+  const [aiRecommendationsActive, setAiRecommendationsActive] = useState(false);
 
   // Load projects on component mount and create sample data if needed
   useEffect(() => {
@@ -168,12 +170,51 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
     setInvestDialogOpen(true);
   };
 
-  // Filter projects based on search query
-  const filteredProjects = projects.filter(project => 
-    project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter projects based on search query and AI recommendations
+  const getFilteredProjects = () => {
+    let currentProjects = projects;
+
+    if (searchQuery) {
+      currentProjects = currentProjects.filter(project => 
+        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (aiRecommendationsActive && user) {
+      // Simple AI recommendation logic:
+      // 1. Prioritize projects in categories the user has already invested in (if any)
+      // 2. Prioritize projects with 'Low' risk if user has less than 500 TND equity
+      // 3. Prioritize projects with 'High' expected return
+      const userInvestedCategories = new Set(userInvestments.map(inv => inv.category));
+      
+      currentProjects = currentProjects.sort((a, b) => {
+        let scoreA = 0;
+        let scoreB = 0;
+
+        // Category match
+        if (userInvestedCategories.has(a.category)) scoreA += 2;
+        if (userInvestedCategories.has(b.category)) scoreB += 2;
+
+        // Risk preference
+        if (wallet && wallet.equity < 500) { // If user has low equity, recommend low risk
+          if (a.riskLevel === 'Low') scoreA += 1;
+          if (b.riskLevel === 'Low') scoreB += 1;
+        }
+
+        // Expected return (simple string comparison for now)
+        if (parseFloat(a.expectedReturn.split('-')[0]) > parseFloat(b.expectedReturn.split('-')[0])) scoreA += 1;
+        if (parseFloat(b.expectedReturn.split('-')[0]) > parseFloat(a.expectedReturn.split('-')[0])) scoreB += 1;
+
+        return scoreB - scoreA; // Higher score comes first
+      });
+    }
+
+    return currentProjects;
+  };
+
+  const filteredProjects = getFilteredProjects();
 
   // Calculate user's portfolio from their investments
   const userInvestments = projects.filter(project => 
@@ -202,7 +243,7 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
 
 
   const getRiskColor = (risk: string) => {
-    switch (risk) {
+    switch (risk.toLowerCase()) {
       case 'low': return 'text-green-500 bg-green-500/10';
       case 'medium': return 'text-yellow-500 bg-yellow-500/10';
       case 'high': return 'text-red-500 bg-red-500/10';
@@ -211,7 +252,7 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
   };
 
   const getRiskIcon = (risk: string) => {
-    switch (risk) {
+    switch (risk.toLowerCase()) {
       case 'low': return <Shield className="h-4 w-4" />;
       case 'medium': return <AlertTriangle className="h-4 w-4" />;
       case 'high': return <AlertTriangle className="h-4 w-4" />;
@@ -315,9 +356,9 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
                       className="pl-10"
                     />
                   </div>
-                  <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
+                  <Button variant={aiRecommendationsActive ? "default" : "outline"} onClick={() => setAiRecommendationsActive(!aiRecommendationsActive)}>
+                    <Zap className="h-4 w-4 mr-2" />
+                    AI Recommendations
                   </Button>
                 </div>
               </CardContent>
@@ -626,7 +667,7 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
                     <div className="flex-1">
                       <p className="text-sm">Increase Investment Amount</p>
                       <p className="text-xs text-muted-foreground">
-                        You have 550 TND available for new investments
+                        You have {wallet?.money || 0} TND available for new investments
                       </p>
                     </div>
                     <Button size="sm" variant="outline">Invest</Button>
@@ -686,8 +727,12 @@ export function InvestmentMode({ onNavigate }: InvestmentModeProps) {
                   Cancel
                 </Button>
                 <Button onClick={handleInvestment} disabled={investing !== null}>
-                  {investing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Confirm Investment
+                  {investing === null ? 'Confirm Investment' : (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Investing...
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

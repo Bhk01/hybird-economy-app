@@ -91,7 +91,7 @@ async function mockApiRequest<T = any>(
         setLocalStorageItem(`user:${userId}`, {
           id: userId, name, email, bio: "", skills: [], avatar: "", location: "", rating: 0, completedJobs: 0, totalEarnings: 0,
           createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp(), onboardingCompleted: false, profileCompleteness: 0,
-          jobExperiences: [], studyExperiences: []
+          jobExperiences: [], studyExperiences: [], certifications: [], servicesOffered: []
         });
         setLocalStorageItem(`wallet:${userId}`, { money: 0, credits: 20, equity: 0 });
         result = { success: true, user: { id: userId, name, email }, message: "Account created successfully" };
@@ -119,7 +119,9 @@ async function mockApiRequest<T = any>(
           onboardingCompleted: rest.onboardingCompleted ?? existingProfile?.onboardingCompleted ?? false,
           profileCompleteness: rest.profileCompleteness ?? existingProfile?.profileCompleteness ?? 0,
           jobExperiences: rest.jobExperiences || existingProfile?.jobExperiences || [],
-          studyExperiences: rest.studyExperiences || existingProfile?.studyExperiences || []
+          studyExperiences: rest.studyExperiences || existingProfile?.studyExperiences || [],
+          certifications: rest.certifications || existingProfile?.certifications || [],
+          servicesOffered: rest.servicesOffered || existingProfile?.servicesOffered || []
         };
         setLocalStorageItem(`user:${newUserId}`, profile);
         result = { success: true, profile };
@@ -184,6 +186,10 @@ async function mockApiRequest<T = any>(
         skill.matches.push({ requestedAt: getCurrentTimestamp(), status: 'pending', ...data });
         setLocalStorageItem(`skill:${skillId}`, skill);
         result = { success: true, skill };
+      } else if (endpoint === '/skills/paid' && method === 'POST') { // New endpoint for paid skill offerings
+        const paidSkillOffering = { id: generateId(), status: 'available', matches: [], createdAt: getCurrentTimestamp(), updatedAt: getCurrentTimestamp(), isPaid: true, ...data };
+        setLocalStorageItem(`skill:${paidSkillOffering.id}`, paidSkillOffering);
+        result = { success: true, skillOffering: paidSkillOffering };
       }
     } else if (endpoint.startsWith('/projects')) {
       const projectId = endpoint.split('/')[2];
@@ -211,10 +217,14 @@ async function mockApiRequest<T = any>(
 
         wallet.money -= amount;
         wallet.equity += investment.equityPercentage;
-        setLocalStorageItem(`wallet:${investorId}`, wallet);
+        await walletApi.updateBalance(investorId, 'money', amount, 'subtract', `Investment in ${project.title}`);
+        // The above line already logs a transaction, so no need to duplicate here.
+        // wallet.money -= amount;
+        // wallet.equity += investment.equityPercentage;
+        // setLocalStorageItem(`wallet:${investorId}`, wallet);
         
-        const transaction = { id: generateId(), userId: investorId, type: "money", amount: -amount, operation: "subtract", timestamp: getCurrentTimestamp(), balance: wallet.money, description: `Investment in ${project.title}` };
-        setLocalStorageItem(`transaction:${transaction.id}`, transaction);
+        // const transaction = { id: generateId(), userId: investorId, type: "money", amount: -amount, operation: "subtract", timestamp: getCurrentTimestamp(), balance: wallet.money, description: `Investment in ${project.title}` };
+        // setLocalStorageItem(`transaction:${transaction.id}`, transaction);
 
         result = { success: true, project, investment };
       }
@@ -283,6 +293,20 @@ export interface StudyExperience {
   description: string;
 }
 
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  price: string; // e.g., "150-300 TND/project"
+  rating: number;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -300,6 +324,8 @@ export interface UserProfile {
   profileCompleteness?: number;
   jobExperiences?: JobExperience[];
   studyExperiences?: StudyExperience[];
+  certifications?: Certification[]; // New field
+  servicesOffered?: Service[]; // New field
 }
 
 export const userApi = {
@@ -392,6 +418,10 @@ export interface SkillOffering {
   matches: SkillSwapRequest[];
   createdAt: string;
   updatedAt: string;
+  isPaid?: boolean; // New field for paid teaching offers
+  price?: number | null; // New field for paid teaching offers
+  certificateRequired?: boolean; // New field for paid teaching offers
+  certificateUrl?: string | null; // New field for paid teaching offers
 }
 
 export interface SkillSwapRequest {
@@ -406,6 +436,9 @@ export const skillsApi = {
   createSkillOffering: (skillData: Partial<SkillOffering>) =>
     mockApiRequest<{ skillOffering: SkillOffering }>('/skills', 'POST', skillData),
   
+  createPaidSkillOffering: (skillData: Partial<SkillOffering>) => // New API function
+    mockApiRequest<{ skillOffering: SkillOffering }>('/skills/paid', 'POST', { ...skillData, isPaid: true }),
+
   getAllSkills: () =>
     mockApiRequest<{ skills: SkillOffering[] }>('/skills'),
   

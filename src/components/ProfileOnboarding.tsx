@@ -20,9 +20,11 @@ import {
   GraduationCap,
   Plus,
   X,
-  Calendar
+  Calendar,
+  Award,
+  DollarSign
 } from 'lucide-react';
-import { userApi, JobExperience, StudyExperience } from '../utils/api';
+import { userApi, JobExperience, StudyExperience, Certification, Service } from '../utils/api';
 import { useUser } from '../App'; // Import useUser to update context
 
 interface ProfileOnboardingProps {
@@ -42,6 +44,10 @@ interface OnboardingData {
   currentJobExperience: Omit<JobExperience, 'id'>;
   studyExperiences: StudyExperience[];
   currentStudyExperience: Omit<StudyExperience, 'id'>;
+  certifications: Certification[]; // New field
+  currentCertification: Omit<Certification, 'id'>; // New field
+  servicesOffered: Service[]; // New field
+  currentService: Omit<Service, 'id'>; // New field
 }
 
 export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onSkip }: ProfileOnboardingProps) {
@@ -70,6 +76,18 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
       startDate: '',
       endDate: null,
       description: ''
+    },
+    certifications: [], // Initialize new field
+    currentCertification: { // Initialize new field
+      name: '',
+      issuer: '',
+      date: ''
+    },
+    servicesOffered: [], // Initialize new field
+    currentService: { // Initialize new field
+      name: '',
+      price: '',
+      rating: 0
     }
   });
 
@@ -109,6 +127,18 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
       title: t('onboarding.studyExperienceTitle'),
       description: t('onboarding.studyExperienceDescription'),
       icon: GraduationCap
+    },
+    {
+      id: 'certifications', // New step
+      title: t('profile.certificationsTitle'),
+      description: t('profile.certificationsDescription'),
+      icon: Award
+    },
+    {
+      id: 'servicesOffered', // New step
+      title: t('profile.servicesOfferedTitle'),
+      description: t('profile.servicesOfferedDescription'),
+      icon: DollarSign
     }
   ];
 
@@ -171,6 +201,46 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
     }));
   };
 
+  const handleAddCertification = () => {
+    const { name, issuer, date } = data.currentCertification;
+    if (name && issuer && date) {
+      setData(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, { ...prev.currentCertification, id: Date.now().toString() }],
+        currentCertification: { name: '', issuer: '', date: '' }
+      }));
+    } else {
+      toast.error(t('profile.certificationRequiredFields'));
+    }
+  };
+
+  const handleRemoveCertification = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter(cert => cert.id !== id)
+    }));
+  };
+
+  const handleAddService = () => {
+    const { name, price } = data.currentService;
+    if (name && price) {
+      setData(prev => ({
+        ...prev,
+        servicesOffered: [...prev.servicesOffered, { ...prev.currentService, id: Date.now().toString(), rating: 0 }]
+      }));
+      setData(prev => ({ ...prev, currentService: { name: '', price: '', rating: 0 } }));
+    } else {
+      toast.error(t('profile.serviceRequiredFields'));
+    }
+  };
+
+  const handleRemoveService = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      servicesOffered: prev.servicesOffered.filter(service => service.id !== id)
+    }));
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -200,6 +270,8 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
       skills: data.skills,
       jobExperiences: data.jobExperiences,
       studyExperiences: data.studyExperiences,
+      certifications: data.certifications, // New field
+      servicesOffered: data.servicesOffered, // New field
       onboardingCompleted: true,
       profileCompleteness: calculateCompleteness()
     };
@@ -229,6 +301,8 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
     if (data.skills.length >= 3) score += 20;
     if (data.jobExperiences.length > 0) score += 15;
     if (data.studyExperiences.length > 0) score += 10;
+    if (data.certifications.length > 0) score += 5; // New field
+    if (data.servicesOffered.length > 0) score += 5; // New field
     if (data.bio.length > 100 && data.skills.length >= 5 && data.jobExperiences.length > 1 && data.studyExperiences.length > 0) score += 10; // Bonus for detailed profile
     return Math.min(score, 100);
   };
@@ -527,6 +601,119 @@ export function ProfileOnboarding({ userId, userName, userEmail, onComplete, onS
                 </div>
                 <Button type="button" onClick={handleAddStudyExperience} className="w-full gap-2">
                   <Plus className="h-4 w-4" /> {t('onboarding.addEducation')}
+                </Button>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'certifications': // New step content
+        return (
+          <div className="space-y-6">
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+              <Icon className="h-8 w-8 text-primary" />
+            </div>
+            <div className="space-y-4">
+              <Label>{t('profile.certificationsTitle')}</Label>
+              <p className="text-sm text-muted-foreground mb-4">{t('profile.certificationsDescription')}</p>
+
+              {data.certifications.map((cert) => (
+                <Card key={cert.id} className="mb-2">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{cert.name}</p>
+                      <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.date}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveCertification(cert.id)}>
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Card className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm">{t('profile.addCertification')}</h4>
+                <div>
+                  <Label htmlFor="cert-name">{t('profile.certificationName')}</Label>
+                  <Input
+                    id="cert-name"
+                    placeholder={t('profile.certificationNamePlaceholder')}
+                    value={data.currentCertification.name}
+                    onChange={(e) => setData(prev => ({ ...prev, currentCertification: { ...prev.currentCertification, name: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cert-issuer">{t('profile.issuer')}</Label>
+                  <Input
+                    id="cert-issuer"
+                    placeholder={t('profile.issuerPlaceholder')}
+                    value={data.currentCertification.issuer}
+                    onChange={(e) => setData(prev => ({ ...prev, currentCertification: { ...prev.currentCertification, issuer: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cert-date">{t('profile.dateIssued')}</Label>
+                  <Input
+                    id="cert-date"
+                    type="date"
+                    value={data.currentCertification.date}
+                    onChange={(e) => setData(prev => ({ ...prev, currentCertification: { ...prev.currentCertification, date: e.target.value } }))}
+                  />
+                </div>
+                <Button type="button" onClick={handleAddCertification} className="w-full gap-2">
+                  <Plus className="h-4 w-4" /> {t('profile.addCertification')}
+                </Button>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'servicesOffered': // New step content
+        return (
+          <div className="space-y-6">
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+              <Icon className="h-8 w-8 text-primary" />
+            </div>
+            <div className="space-y-4">
+              <Label>{t('profile.servicesOfferedTitle')}</Label>
+              <p className="text-sm text-muted-foreground mb-4">{t('profile.servicesOfferedDescription')}</p>
+
+              {data.servicesOffered.map((service) => (
+                <Card key={service.id} className="mb-2">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{service.name}</p>
+                      <p className="text-xs text-muted-foreground">{service.price}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveService(service.id)}>
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Card className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm">{t('profile.addService')}</h4>
+                <div>
+                  <Label htmlFor="service-name">{t('profile.serviceName')}</Label>
+                  <Input
+                    id="service-name"
+                    placeholder={t('profile.serviceNamePlaceholder')}
+                    value={data.currentService.name}
+                    onChange={(e) => setData(prev => ({ ...prev, currentService: { ...prev.currentService, name: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="service-price">{t('profile.servicePrice')}</Label>
+                  <Input
+                    id="service-price"
+                    placeholder={t('profile.servicePricePlaceholder')}
+                    value={data.currentService.price}
+                    onChange={(e) => setData(prev => ({ ...prev, currentService: { ...prev.currentService, price: e.target.value } }))}
+                  />
+                </div>
+                <Button type="button" onClick={handleAddService} className="w-full gap-2">
+                  <Plus className="h-4 w-4" /> {t('profile.addService')}
                 </Button>
               </Card>
             </div>

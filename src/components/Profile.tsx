@@ -35,11 +35,12 @@ import {
   AlertCircle,
   Check,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  DollarSign
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { useI18n } from '../utils/i18n';
-import { userApi } from '../utils/api';
+import { userApi, Certification, Service, JobExperience, StudyExperience } from '../utils/api';
 
 interface ProfileProps {
   onNavigate: (page: PageType) => void;
@@ -69,8 +70,10 @@ export function Profile({ onNavigate }: ProfileProps) {
     location: '',
     avatar: '',
     skills: [] as string[],
-    jobExperiences: [] as { id: string; title: string; company: string; startDate: string; endDate: string | null; description: string }[],
-    studyExperiences: [] as { id: string; degree: string; institution: string; startDate: string; endDate: string | null; description: string }[],
+    jobExperiences: [] as JobExperience[],
+    studyExperiences: [] as StudyExperience[],
+    certifications: [] as Certification[], // New field
+    servicesOffered: [] as Service[], // New field
   });
   
   const [originalData, setOriginalData] = useState({ ...editedData });
@@ -89,6 +92,8 @@ export function Profile({ onNavigate }: ProfileProps) {
         skills: user.skills || [],
         jobExperiences: user.jobExperiences || [],
         studyExperiences: user.studyExperiences || [],
+        certifications: user.certifications || [], // Initialize new field
+        servicesOffered: user.servicesOffered || [], // Initialize new field
       };
       setEditedData(initialData);
       setOriginalData(initialData);
@@ -167,11 +172,13 @@ export function Profile({ onNavigate }: ProfileProps) {
         // username: editedData.username, // Username update logic would be more complex in a real app
         bio: editedData.bio,
         // email: editedData.email, // Email update usually requires re-verification
-        // location: editedData.location,
+        location: editedData.location,
         // avatar: editedData.avatar,
         skills: editedData.skills,
         jobExperiences: editedData.jobExperiences,
         studyExperiences: editedData.studyExperiences,
+        certifications: editedData.certifications, // Save new field
+        servicesOffered: editedData.servicesOffered, // Save new field
       });
       setUser(updatedProfile.profile); // Update user context
       setOriginalData({ ...editedData });
@@ -225,86 +232,78 @@ export function Profile({ onNavigate }: ProfileProps) {
     toast.info('Photo upload coming soon! This would open a file picker with crop and compression options.');
   };
 
-  // Map user skills to profile skills with default category and level
-  const skills = editedData.skills && editedData.skills.length > 0 
-    ? editedData.skills.map(skill => ({
-        name: skill,
-        level: 75, // Placeholder level
-        category: 'Skills'
-      }))
-    : [
-        { name: t('profile.addYourSkills'), level: 0, category: 'Getting Started' }
-      ];
-
-  const services = [
-    { name: 'Web Development', price: '150-300 TND/project', rating: 4.9 },
-    { name: 'UI/UX Design', price: '100-200 TND/project', rating: 4.8 },
-    { name: 'French Tutoring', price: '25 TND/hour', rating: 5.0 },
-    { name: 'Tech Consulting', price: '50 TND/hour', rating: 4.7 }
-  ];
-
-  const portfolio = [
-    {
-      id: 1,
-      title: 'E-commerce Platform',
-      type: 'Web Development',
-      description: 'Full-stack e-commerce solution with React and Node.js',
-      technologies: ['React', 'Node.js', 'MongoDB'],
-      link: 'https://example.com'
-    },
-    {
-      id: 2,
-      title: 'Mobile Banking App Design',
-      type: 'UI/UX Design',
-      description: 'Complete mobile app design for a fintech startup',
-      technologies: ['Figma', 'Prototyping', 'User Research'],
-      link: 'https://figma.com/example'
-    },
-    {
-      id: 3,
-      title: 'Restaurant Management System',
-      type: 'Web Development',
-      description: 'Point of sale and inventory management system',
-      technologies: ['Vue.js', 'Laravel', 'MySQL'],
-      link: 'https://demo.example.com'
+  // Add/Remove Skill
+  const [currentSkillInput, setCurrentSkillInput] = useState('');
+  const handleAddSkill = () => {
+    if (currentSkillInput.trim() && !editedData.skills.includes(currentSkillInput.trim())) {
+      setEditedData(prev => ({ ...prev, skills: [...prev.skills, currentSkillInput.trim()] }));
+      setCurrentSkillInput('');
     }
-  ];
+  };
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setEditedData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }));
+  };
 
-  const reviews = [
-    {
-      id: 1,
-      reviewer: 'Sarah B.',
-      avatar: 'SB',
-      rating: 5,
-      date: '2 days ago',
-      project: 'E-commerce Website',
-      comment: 'Excellent work! Delivered exactly what we needed on time and within budget. Great communication throughout the project.'
-    },
-    {
-      id: 2,
-      reviewer: 'Mohamed K.',
-      avatar: 'MK',
-      rating: 5,
-      date: '1 week ago',
-      project: 'Logo Design',
-      comment: 'Very professional and creative. The design exceeded our expectations. Highly recommend!'
-    },
-    {
-      id: 3,
-      reviewer: 'Fatma A.',
-      avatar: 'FA',
-      rating: 4,
-      date: '2 weeks ago',
-      project: 'French Lessons',
-      comment: 'Great teacher! Very patient and explains concepts clearly. My French has improved significantly.'
+  // Add/Remove Job Experience
+  const [newJobExp, setNewJobExp] = useState<Omit<JobExperience, 'id'>>({ title: '', company: '', startDate: '', endDate: null, description: '' });
+  const handleAddJobExperience = () => {
+    if (newJobExp.title && newJobExp.company && newJobExp.startDate) {
+      setEditedData(prev => ({ ...prev, jobExperiences: [...prev.jobExperiences, { ...newJobExp, id: generateId() }] }));
+      setNewJobExp({ title: '', company: '', startDate: '', endDate: null, description: '' });
+    } else {
+      toast.error(t('onboarding.jobExperienceRequiredFields'));
     }
-  ];
+  };
+  const handleRemoveJobExperience = (id: string) => {
+    setEditedData(prev => ({ ...prev, jobExperiences: prev.jobExperiences.filter(exp => exp.id !== id) }));
+  };
 
-  const certifications = [
-    { name: 'React Developer Certification', issuer: 'Meta', date: '2024' },
-    { name: 'AWS Cloud Practitioner', issuer: 'Amazon', date: '2023' },
-    { name: 'UI/UX Design Specialization', issuer: 'Google', date: '2023' }
-  ];
+  // Add/Remove Study Experience
+  const [newStudyExp, setNewStudyExp] = useState<Omit<StudyExperience, 'id'>>({ degree: '', institution: '', startDate: '', endDate: null, description: '' });
+  const handleAddStudyExperience = () => {
+    if (newStudyExp.degree && newStudyExp.institution && newStudyExp.startDate) {
+      setEditedData(prev => ({ ...prev, studyExperiences: [...prev.studyExperiences, { ...newStudyExp, id: generateId() }] }));
+      setNewStudyExp({ degree: '', institution: '', startDate: '', endDate: null, description: '' });
+    } else {
+      toast.error(t('onboarding.studyExperienceRequiredFields'));
+    }
+  };
+  const handleRemoveStudyExperience = (id: string) => {
+    setEditedData(prev => ({ ...prev, studyExperiences: prev.studyExperiences.filter(exp => exp.id !== id) }));
+  };
+
+  // Add/Remove Certification
+  const [newCert, setNewCert] = useState<Omit<Certification, 'id'>>({ name: '', issuer: '', date: '' });
+  const handleAddCertification = () => {
+    if (newCert.name && newCert.issuer && newCert.date) {
+      setEditedData(prev => ({ ...prev, certifications: [...prev.certifications, { ...newCert, id: generateId() }] }));
+      setNewCert({ name: '', issuer: '', date: '' });
+    } else {
+      toast.error(t('profile.certificationRequiredFields'));
+    }
+  };
+  const handleRemoveCertification = (id: string) => {
+    setEditedData(prev => ({ ...prev, certifications: prev.certifications.filter(cert => cert.id !== id) }));
+  };
+
+  // Add/Remove Service
+  const [newService, setNewService] = useState<Omit<Service, 'id'>>({ name: '', price: '', rating: 0 });
+  const handleAddService = () => {
+    if (newService.name && newService.price) {
+      setEditedData(prev => ({ ...prev, servicesOffered: [...prev.servicesOffered, { ...newService, id: generateId() }] }));
+      setNewService({ name: '', price: '', rating: 0 });
+    } else {
+      toast.error(t('profile.serviceRequiredFields'));
+    }
+  };
+  const handleRemoveService = (id: string) => {
+    setEditedData(prev => ({ ...prev, servicesOffered: prev.servicesOffered.filter(service => service.id !== id) }));
+  };
+
+  // Helper to generate unique IDs (mocked for frontend)
+  function generateId() {
+    return Math.random().toString(36).substr(2, 9);
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -477,35 +476,42 @@ export function Profile({ onNavigate }: ProfileProps) {
                     <div className="flex items-center justify-between">
                       <CardTitle>Skills & Expertise</CardTitle>
                       {isEditing && (
-                        <Button size="sm" variant="outline" className="gap-2">
-                          <Plus className="h-4 w-4" />
-                          {t('profile.addSkill')}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder={t('profile.addSkillPlaceholder')}
+                            value={currentSkillInput}
+                            onChange={(e) => setCurrentSkillInput(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                            className="h-8 w-40"
+                          />
+                          <Button size="sm" onClick={handleAddSkill} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            {t('common.add')}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {skills.map((skill, index) => (
-                      <div key={index}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{skill.name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {skill.category}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{skill.level}%</span>
-                            {isEditing && skill.level > 0 && (
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                    {editedData.skills.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">{t('profile.noSkillsAdded')}</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {editedData.skills.map((skill, index) => (
+                          <Badge key={index} variant="secondary" className="text-sm">
+                            {skill}
+                            {isEditing && (
+                              <button
+                                onClick={() => handleRemoveSkill(skill)}
+                                className="ml-1 text-muted-foreground hover:text-destructive"
+                              >
                                 <X className="h-3 w-3" />
-                              </Button>
+                              </button>
                             )}
-                          </div>
-                        </div>
-                        <Progress value={skill.level} className="h-2" />
+                          </Badge>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </CardContent>
                 </Card>
 
@@ -515,7 +521,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     <div className="flex items-center justify-between">
                       <CardTitle>{t('profile.jobExperienceTitle')}</CardTitle>
                       {isEditing && (
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button size="sm" variant="outline" className="gap-2" onClick={handleAddJobExperience}>
                           <Plus className="h-4 w-4" />
                           {t('profile.addExperience')}
                         </Button>
@@ -537,8 +543,8 @@ export function Profile({ onNavigate }: ProfileProps) {
                             {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
                           </div>
                           {isEditing && (
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                              <Edit className="h-3 w-3" />
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleRemoveJobExperience(exp.id)}>
+                              <X className="h-3 w-3 text-destructive" />
                             </Button>
                           )}
                         </div>
@@ -553,7 +559,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     <div className="flex items-center justify-between">
                       <CardTitle>{t('profile.studyExperienceTitle')}</CardTitle>
                       {isEditing && (
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button size="sm" variant="outline" className="gap-2" onClick={handleAddStudyExperience}>
                           <Plus className="h-4 w-4" />
                           {t('profile.addEducation')}
                         </Button>
@@ -575,8 +581,8 @@ export function Profile({ onNavigate }: ProfileProps) {
                             {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
                           </div>
                           {isEditing && (
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                              <Edit className="h-3 w-3" />
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleRemoveStudyExperience(exp.id)}>
+                              <X className="h-3 w-3 text-destructive" />
                             </Button>
                           )}
                         </div>
@@ -589,36 +595,40 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Services I Offer</CardTitle>
+                      <CardTitle>{t('profile.servicesOfferedTitle')}</CardTitle>
                       {isEditing && (
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button size="sm" variant="outline" className="gap-2" onClick={handleAddService}>
                           <Plus className="h-4 w-4" />
-                          Add Service
+                          {t('profile.addService')}
                         </Button>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
-                      {services.map((service, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <h4 className="text-sm">{service.name}</h4>
-                            <p className="text-xs text-muted-foreground">{service.price}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-current text-yellow-500" />
-                              <span className="text-xs">{service.rating}</span>
+                      {editedData.servicesOffered.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">{t('profile.noServicesOffered')}</p>
+                      ) : (
+                        editedData.servicesOffered.map((service) => (
+                          <div key={service.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <h4 className="text-sm">{service.name}</h4>
+                              <p className="text-xs text-muted-foreground">{service.price}</p>
                             </div>
-                            {isEditing && (
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-current text-yellow-500" />
+                                <span className="text-xs">{service.rating.toFixed(1)}</span>
+                              </div>
+                              {isEditing && (
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleRemoveService(service.id)}>
+                                  <X className="h-3 w-3 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -627,31 +637,35 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Certifications</CardTitle>
+                      <CardTitle>{t('profile.certificationsTitle')}</CardTitle>
                       {isEditing && (
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button size="sm" variant="outline" className="gap-2" onClick={handleAddCertification}>
                           <Plus className="h-4 w-4" />
-                          Add Certification
+                          {t('profile.addCertification')}
                         </Button>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {certifications.map((cert, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                          <Award className="h-5 w-5 text-primary" />
-                          <div className="flex-1">
-                            <h4 className="text-sm">{cert.name}</h4>
-                            <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.date}</p>
+                      {editedData.certifications.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">{t('profile.noCertifications')}</p>
+                      ) : (
+                        editedData.certifications.map((cert) => (
+                          <div key={cert.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <Award className="h-5 w-5 text-primary" />
+                            <div className="flex-1">
+                              <h4 className="text-sm">{cert.name}</h4>
+                              <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.date}</p>
+                            </div>
+                            {isEditing && (
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleRemoveCertification(cert.id)}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
-                          {isEditing && (
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                              <X className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -673,34 +687,55 @@ export function Profile({ onNavigate }: ProfileProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
-                      {portfolio.map((project) => (
-                        <Card key={project.id} className="overflow-hidden">
-                          <div className="aspect-video bg-muted flex items-center justify-center">
-                            <FileText className="h-8 w-8 text-muted-foreground" />
+                      {/* Placeholder for portfolio items */}
+                      <Card className="overflow-hidden">
+                        <div className="aspect-video bg-muted flex items-center justify-center">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="text-sm">E-commerce Platform</h4>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
                           </div>
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm">{project.title}</h4>
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                                <ExternalLink className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <Badge variant="outline" className="text-xs mb-2">
-                              {project.type}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground mb-3">
-                              {project.description}
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {project.technologies.map((tech, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                          <Badge variant="outline" className="text-xs mb-2">
+                            Web Development
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Full-stack e-commerce solution with React and Node.js
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="secondary" className="text-xs">React</Badge>
+                            <Badge variant="secondary" className="text-xs">Node.js</Badge>
+                            <Badge variant="secondary" className="text-xs">MongoDB</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="overflow-hidden">
+                        <div className="aspect-video bg-muted flex items-center justify-center">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="text-sm">Mobile Banking App Design</h4>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <Badge variant="outline" className="text-xs mb-2">
+                            UI/UX Design
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Complete mobile app design for a fintech startup
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="secondary" className="text-xs">Figma</Badge>
+                            <Badge variant="secondary" className="text-xs">Prototyping</Badge>
+                            <Badge variant="secondary" className="text-xs">User Research</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </CardContent>
                 </Card>
@@ -715,32 +750,31 @@ export function Profile({ onNavigate }: ProfileProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="border rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>{review.avatar}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <div>
-                                <h4 className="text-sm">{review.reviewer}</h4>
-                                <p className="text-xs text-muted-foreground">{review.project}</p>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center gap-1 mb-1">
-                                  {Array.from({ length: review.rating }).map((_, i) => (
-                                    <Star key={i} className="h-3 w-3 fill-current text-yellow-500" />
-                                  ))}
-                                </div>
-                                <p className="text-xs text-muted-foreground">{review.date}</p>
-                              </div>
+                    {/* Placeholder for reviews */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback>SB</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h4 className="text-sm">Sarah B.</h4>
+                              <p className="text-xs text-muted-foreground">E-commerce Website</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">{review.comment}</p>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 mb-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star key={i} className="h-3 w-3 fill-current text-yellow-500" />
+                                ))}
+                              </div>
+                              <p className="text-xs text-muted-foreground">2 days ago</p>
+                            </div>
                           </div>
+                          <p className="text-sm text-muted-foreground">Excellent work! Delivered exactly what we needed on time and within budget. Great communication throughout the project.</p>
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

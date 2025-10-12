@@ -103,7 +103,8 @@ const translations: Record<Language, TranslationData> = {
       success: 'Success',
       error: 'Error',
       warning: 'Warning',
-      info: 'Info'
+      info: 'Info',
+      backToDashboard: 'Back to Dashboard'
     },
     // Navigation
     navigation: {
@@ -370,7 +371,46 @@ const translations: Record<Language, TranslationData> = {
       servicePrice: 'Price/Rate', // New
       servicePricePlaceholder: 'e.g., 50 TND/hour, 200-500 TND/project', // New
       serviceRequiredFields: 'Please fill in service name and price/rate.', // New
-      addSkillPlaceholder: 'e.g., React, Photoshop' // New
+      addSkillPlaceholder: 'e.g., React, Photoshop', // New
+      noReviewsYet: 'No reviews yet',
+      noReviewsDesc: 'Be the first to leave a review for this user!'
+    },
+    // Public Profile
+    publicProfile: {
+      profileNotFound: 'Profile not found',
+      profileUnavailable: 'The user profile you are looking for is not available.',
+      fetchError: 'Failed to fetch user profile.',
+      chatFeatureComingSoon: 'Chat feature coming soon!',
+      message: 'Message',
+      addReview: 'Add Review',
+      addReviewFor: 'Add Review for {{userName}}',
+      shareExperience: 'Share your experience with this user.',
+      yourRating: 'Your Rating',
+      yourComment: 'Your Comment',
+      commentPlaceholder: 'Write your review here...',
+      loginToAddReview: 'Please log in to add a review.',
+      cannotReviewSelf: 'You cannot review your own profile.',
+      reviewRequiredFields: 'Please provide a rating and a comment.',
+      reviewSuccess: 'Review submitted successfully!',
+      reviewError: 'Failed to submit review.',
+      reportUser: 'Report User',
+      reportUserFor: 'Report User: {{userName}}',
+      reportReasonDesc: 'Please select a reason for reporting this user. Your report will be reviewed by our team.',
+      reason: 'Reason',
+      selectReason: 'Select a reason',
+      reasonSpam: 'Spam or misleading content',
+      reasonHarassment: 'Harassment or hate speech',
+      reasonFraud: 'Fraudulent activity',
+      reasonOther: 'Other (please specify in message)',
+      loginToReport: 'Please log in to report a user.',
+      selectReportReason: 'Please select a reason for reporting.',
+      reportSuccess: 'User reported successfully!',
+      reportError: 'Failed to report user.',
+      blockUser: 'Block User',
+      confirmBlock: 'Are you sure you want to block {{userName}}? You will no longer see their content or be able to interact with them.',
+      loginToBlock: 'Please log in to block a user.',
+      blockSuccess: '{{userName}} has been blocked.',
+      blockError: 'Failed to block user.'
     },
     // Wallet
     wallet: {
@@ -529,7 +569,8 @@ const translations: Record<Language, TranslationData> = {
       success: 'نجح',
       error: 'خطأ',
       warning: 'تحذير',
-      info: 'معلومات'
+      info: 'معلومات',
+      backToDashboard: 'العودة إلى لوحة التحكم'
     },
     // Navigation
     navigation: {
@@ -785,7 +826,46 @@ const translations: Record<Language, TranslationData> = {
       servicePrice: 'السعر/المعدل', // New
       servicePricePlaceholder: 'مثال: 50 دينار/ساعة، 200-500 دينار/مشروع', // New
       serviceRequiredFields: 'يرجى ملء اسم الخدمة والسعر/المعدل.', // New
-      addSkillPlaceholder: 'مثال: React, Photoshop' // New
+      addSkillPlaceholder: 'مثال: React, Photoshop', // New
+      noReviewsYet: 'لا توجد مراجعات بعد',
+      noReviewsDesc: 'كن أول من يترك مراجعة لهذا المستخدم!'
+    },
+    // Public Profile
+    publicProfile: {
+      profileNotFound: 'الملف الشخصي غير موجود',
+      profileUnavailable: 'الملف الشخصي للمستخدم الذي تبحث عنه غير متاح.',
+      fetchError: 'فشل جلب الملف الشخصي للمستخدم.',
+      chatFeatureComingSoon: 'ميزة الدردشة قريباً!',
+      message: 'رسالة',
+      addReview: 'إضافة مراجعة',
+      addReviewFor: 'إضافة مراجعة لـ {{userName}}',
+      shareExperience: 'شارك تجربتك مع هذا المستخدم.',
+      yourRating: 'تقييمك',
+      yourComment: 'تعليقك',
+      commentPlaceholder: 'اكتب مراجعتك هنا...',
+      loginToAddReview: 'يرجى تسجيل الدخول لإضافة مراجعة.',
+      cannotReviewSelf: 'لا يمكنك مراجعة ملفك الشخصي.',
+      reviewRequiredFields: 'يرجى تقديم تقييم وتعليق.',
+      reviewSuccess: 'تم إرسال المراجعة بنجاح!',
+      reviewError: 'فشل إرسال المراجعة.',
+      reportUser: 'الإبلاغ عن المستخدم',
+      reportUserFor: 'الإبلاغ عن المستخدم: {{userName}}',
+      reportReasonDesc: 'يرجى تحديد سبب الإبلاغ عن هذا المستخدم. سيتم مراجعة تقريرك من قبل فريقنا.',
+      reason: 'السبب',
+      selectReason: 'اختر سبباً',
+      reasonSpam: 'محتوى غير مرغوب فيه أو مضلل',
+      reasonHarassment: 'مضايقة أو خطاب كراهية',
+      reasonFraud: 'نشاط احتيالي',
+      reasonOther: 'أخرى (يرجى التحديد في الرسالة)',
+      loginToReport: 'يرجى تسجيل الدخول للإبلاغ عن مستخدم.',
+      selectReportReason: 'يرجى تحديد سبب للإبلاغ.',
+      reportSuccess: 'تم الإبلاغ عن المستخدم بنجاح!',
+      reportError: 'فشل الإبلاغ عن المستخدم.',
+      blockUser: 'حظر المستخدم',
+      confirmBlock: 'هل أنت متأكد أنك تريد حظر {{userName}}؟ لن تتمكن بعد الآن من رؤية محتواه أو التفاعل معه.',
+      loginToBlock: 'يرجى تسجيل الدخول لحظر مستخدم.',
+      blockSuccess: 'تم حظر {{userName}}.',
+      blockError: 'فشل حظر المستخدم.'
     },
     // Wallet
     wallet: {
@@ -944,7 +1024,8 @@ const translations: Record<Language, TranslationData> = {
       success: 'Succès',
       error: 'Erreur',
       warning: 'Avertissement',
-      info: 'Info'
+      info: 'Info',
+      backToDashboard: 'Retour au tableau de bord'
     },
     // Navigation
     navigation: {
@@ -1200,7 +1281,46 @@ const translations: Record<Language, TranslationData> = {
       servicePrice: 'Prix/Tarif', // New
       servicePricePlaceholder: 'ex: 50 TND/heure, 200-500 TND/projet', // New
       serviceRequiredFields: 'Veuillez remplir le nom du service et le prix/tarif.', // New
-      addSkillPlaceholder: 'ex: React, Photoshop' // New
+      addSkillPlaceholder: 'ex: React, Photoshop', // New
+      noReviewsYet: 'Aucun avis pour le moment',
+      noReviewsDesc: 'Soyez le premier à laisser un avis pour cet utilisateur!'
+    },
+    // Public Profile
+    publicProfile: {
+      profileNotFound: 'Profil introuvable',
+      profileUnavailable: 'Le profil utilisateur que vous recherchez n\'est pas disponible.',
+      fetchError: 'Échec de la récupération du profil utilisateur.',
+      chatFeatureComingSoon: 'Fonctionnalité de chat bientôt disponible!',
+      message: 'Message',
+      addReview: 'Ajouter un avis',
+      addReviewFor: 'Ajouter un avis pour {{userName}}',
+      shareExperience: 'Partagez votre expérience avec cet utilisateur.',
+      yourRating: 'Votre note',
+      yourComment: 'Votre commentaire',
+      commentPlaceholder: 'Écrivez votre avis ici...',
+      loginToAddReview: 'Veuillez vous connecter pour ajouter un avis.',
+      cannotReviewSelf: 'Vous ne pouvez pas évaluer votre propre profil.',
+      reviewRequiredFields: 'Veuillez fournir une note et un commentaire.',
+      reviewSuccess: 'Avis soumis avec succès!',
+      reviewError: 'Échec de la soumission de l\'avis.',
+      reportUser: 'Signaler l\'utilisateur',
+      reportUserFor: 'Signaler l\'utilisateur : {{userName}}',
+      reportReasonDesc: 'Veuillez sélectionner une raison pour signaler cet utilisateur. Votre rapport sera examiné par notre équipe.',
+      reason: 'Raison',
+      selectReason: 'Sélectionner une raison',
+      reasonSpam: 'Contenu indésirable ou trompeur',
+      reasonHarassment: 'Harcèlement ou discours haineux',
+      reasonFraud: 'Activité frauduleuse',
+      reasonOther: 'Autre (veuillez préciser dans le message)',
+      loginToReport: 'Veuillez vous connecter pour signaler un utilisateur.',
+      selectReportReason: 'Veuillez sélectionner une raison pour le signalement.',
+      reportSuccess: 'Utilisateur signalé avec succès!',
+      reportError: 'Échec du signalement de l\'utilisateur.',
+      blockUser: 'Bloquer l\'utilisateur',
+      confirmBlock: 'Êtes-vous sûr de vouloir bloquer {{userName}} ? Vous ne verrez plus son contenu et ne pourrez plus interagir avec lui.',
+      loginToBlock: 'Veuillez vous connecter pour bloquer un utilisateur.',
+      blockSuccess: '{{userName}} a été bloqué.',
+      blockError: 'Échec du blocage de l\'utilisateur.'
     },
     // Wallet
     wallet: {

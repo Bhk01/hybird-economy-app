@@ -305,7 +305,7 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'text-green-500 bg-green-500/10';
+      case 'active': return 'text-green-500 bg-green-500/10';
       case 'matched': return 'text-blue-500 bg-blue-500/10';
       case 'pending': return 'text-yellow-500 bg-yellow-500/10';
       default: return 'text-gray-500 bg-gray-500/10';
@@ -926,7 +926,7 @@ export function SkillSwapMode({ onNavigate }: SkillSwapModeProps) {
                               </>
                             )}
                             {match.status === 'accepted' && (
-                              <Badge className="bg-green-500/10 text-green-500">Accepted</Badge>
+                               <Badge className="bg-green-500/10 text-green-500">Accepted</Badge>
                             )}
                             {match.status === 'declined' && (
                               <Badge variant="destructive">Declined</Badge>

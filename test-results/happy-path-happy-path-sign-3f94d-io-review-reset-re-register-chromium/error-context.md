@@ -1,0 +1,228 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - navigation [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]:
+            - img [ref=e10]
+            - generic [ref=e13]: Work & Invest
+          - generic [ref=e14]:
+            - link "Features" [ref=e15] [cursor=pointer]:
+              - /url: "#features"
+            - link "How It Works" [ref=e16] [cursor=pointer]:
+              - /url: "#how-it-works"
+            - link "About" [ref=e17] [cursor=pointer]:
+              - /url: "#about"
+          - generic [ref=e18]:
+            - button "🇬🇧" [ref=e19]:
+              - img
+              - text: 🇬🇧
+            - button [ref=e20]:
+              - img
+            - button "Sign In" [ref=e21]
+            - button "Get Started" [ref=e22]
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: 🚀 The Future of Collaborative Economy
+        - heading "Work, Swap & Invest Starting from Just 1 TND" [level=1] [ref=e28]:
+          - text: Work, Swap & Invest
+          - generic [ref=e29]: Starting from Just 1 TND
+        - paragraph [ref=e30]: The hybrid economy platform where you can hire talent, exchange skills, or invest in local projects. Start with as little as 1 TND or 1 skill.
+        - generic [ref=e31]:
+          - button "Get Started" [ref=e32]:
+            - text: Get Started
+            - img
+          - button "Sign In" [ref=e33]
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - img [ref=e36]
+            - generic [ref=e39]: Free to join
+          - generic [ref=e40]:
+            - img [ref=e41]
+            - generic [ref=e44]: Secure payments
+          - generic [ref=e45]:
+            - img [ref=e46]
+            - generic [ref=e49]: AI-powered matching
+      - generic [ref=e50]:
+        - img "Professional team collaboration" [ref=e52]
+        - generic [ref=e54]:
+          - img [ref=e56]
+          - generic [ref=e61]:
+            - paragraph [ref=e62]: Active Users
+            - paragraph [ref=e63]: 10,000+
+        - generic [ref=e65]:
+          - img [ref=e67]
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: Transactions Completed
+            - paragraph [ref=e72]: 50,000+
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]: Features
+        - heading "Three Ways to Succeed" [level=2] [ref=e77]
+        - paragraph [ref=e78]: Whether you want to earn, learn, or invest, our platform adapts to your goals.
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - img [ref=e83]
+            - heading "Hire Mode" [level=4] [ref=e88]
+            - paragraph [ref=e89]: Find and hire skilled professionals for your projects
+          - list [ref=e91]:
+            - listitem [ref=e92]:
+              - img [ref=e93]
+              - generic [ref=e96]: Post jobs or service requests
+            - listitem [ref=e97]:
+              - img [ref=e98]
+              - generic [ref=e101]: Secure escrow payments
+            - listitem [ref=e102]:
+              - img [ref=e103]
+              - generic [ref=e106]: Integrated TND payments
+            - listitem [ref=e107]:
+              - img [ref=e108]
+              - generic [ref=e111]: Rating & review system
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - img [ref=e115]
+            - heading "Skill Swap" [level=4] [ref=e120]
+            - paragraph [ref=e121]: Exchange your skills with others in the community
+          - list [ref=e123]:
+            - listitem [ref=e124]:
+              - img [ref=e125]
+              - generic [ref=e128]: Direct skill exchanges
+            - listitem [ref=e129]:
+              - img [ref=e130]
+              - generic [ref=e133]: Credits for indirect swaps
+            - listitem [ref=e134]:
+              - img [ref=e135]
+              - generic [ref=e138]: AI-powered matching
+            - listitem [ref=e139]:
+              - img [ref=e140]
+              - generic [ref=e143]: Build your network
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - img [ref=e147]
+            - heading "Micro-Investment" [level=4] [ref=e150]
+            - paragraph [ref=e151]: Invest in local projects starting from just 1 TND
+          - list [ref=e153]:
+            - listitem [ref=e154]:
+              - img [ref=e155]
+              - generic [ref=e158]: Minimum 1 TND investment
+            - listitem [ref=e159]:
+              - img [ref=e160]
+              - generic [ref=e163]: Profit sharing opportunities
+            - listitem [ref=e164]:
+              - img [ref=e165]
+              - generic [ref=e168]: AI risk assessment
+            - listitem [ref=e169]:
+              - img [ref=e170]
+              - generic [ref=e173]: Local project focus
+    - generic [ref=e175]:
+      - generic [ref=e176]:
+        - generic [ref=e177]: How It Works
+        - heading "Get Started in Minutes" [level=2] [ref=e178]
+        - paragraph [ref=e179]: Join our platform in three simple steps and start your journey today
+      - generic [ref=e180]:
+        - generic [ref=e182]:
+          - generic [ref=e183]: "1"
+          - heading "Create Your Account" [level=3] [ref=e184]
+          - paragraph [ref=e185]: Sign up for free and complete your profile with your skills and interests
+        - generic [ref=e187]:
+          - generic [ref=e188]: "2"
+          - heading "Choose Your Mode" [level=3] [ref=e189]
+          - paragraph [ref=e190]: Select whether you want to hire, swap skills, or invest in projects
+        - generic [ref=e192]:
+          - generic [ref=e193]: "3"
+          - heading "Start Transacting" [level=3] [ref=e194]
+          - paragraph [ref=e195]: Connect with others and start building your economic future
+    - generic [ref=e198]:
+      - img "Secure platform" [ref=e200]
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - generic [ref=e203]: Trust & Safety
+          - heading "Built on Trust & Security" [level=2] [ref=e204]
+          - paragraph [ref=e205]: Your safety is our priority. We've built comprehensive systems to ensure secure transactions and trustworthy interactions.
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - img [ref=e209]
+            - generic [ref=e211]:
+              - heading "ID Verification" [level=4] [ref=e212]
+              - paragraph [ref=e213]: All users undergo identity verification
+          - generic [ref=e214]:
+            - img [ref=e216]
+            - generic [ref=e219]:
+              - heading "Secure Wallet" [level=4] [ref=e220]
+              - paragraph [ref=e221]: Multi-currency wallet with escrow protection
+          - generic [ref=e222]:
+            - img [ref=e224]
+            - generic [ref=e226]:
+              - heading "Rating System" [level=4] [ref=e227]
+              - paragraph [ref=e228]: Community-driven trust scores
+          - generic [ref=e229]:
+            - img [ref=e231]
+            - generic [ref=e233]:
+              - heading "AI Fraud Detection" [level=4] [ref=e234]
+              - paragraph [ref=e235]: Advanced AI monitors for suspicious activity
+    - generic [ref=e237]:
+      - heading "Ready to Transform Your Economic Life?" [level=2] [ref=e238]
+      - paragraph [ref=e239]: Join thousands of Tunisians who are already working, swapping, and investing in the new collaborative economy.
+      - button "Join Work & Invest Today" [ref=e240]:
+        - text: Join Work & Invest Today
+        - img
+    - contentinfo [ref=e241]:
+      - generic [ref=e242]:
+        - generic [ref=e243]:
+          - generic [ref=e244]:
+            - generic [ref=e245]:
+              - img [ref=e247]
+              - generic [ref=e250]: Work & Invest
+            - paragraph [ref=e251]: Your hybrid economy platform for hiring, skill swapping, and micro-investing
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - img [ref=e254]
+                - generic [ref=e257]: Tunis, Tunisia
+              - generic [ref=e258]:
+                - img [ref=e259]
+                - generic [ref=e262]: contact@workandinvest.com
+          - generic [ref=e263]:
+            - heading "Platform" [level=3] [ref=e264]
+            - list [ref=e265]:
+              - listitem [ref=e266]:
+                - link "Features" [ref=e267] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=e268]:
+                - link "How It Works" [ref=e269] [cursor=pointer]:
+                  - /url: "#how-it-works"
+              - listitem [ref=e270]:
+                - link "About" [ref=e271] [cursor=pointer]:
+                  - /url: "#about"
+          - generic [ref=e272]:
+            - heading "Services" [level=3] [ref=e273]
+            - list [ref=e274]:
+              - listitem [ref=e275]:
+                - link "Hire Mode" [ref=e276] [cursor=pointer]:
+                  - /url: "#hire"
+              - listitem [ref=e277]:
+                - link "Skill Swap" [ref=e278] [cursor=pointer]:
+                  - /url: "#skill-swap"
+              - listitem [ref=e279]:
+                - link "Micro-Investment" [ref=e280] [cursor=pointer]:
+                  - /url: "#invest"
+          - generic [ref=e281]:
+            - heading "Legal" [level=3] [ref=e282]
+            - list [ref=e283]:
+              - listitem [ref=e284]:
+                - link "Terms of Service" [ref=e285] [cursor=pointer]:
+                  - /url: "#terms"
+              - listitem [ref=e286]:
+                - link "Privacy Policy" [ref=e287] [cursor=pointer]:
+                  - /url: "#privacy"
+              - listitem [ref=e288]:
+                - link "Help Center" [ref=e289] [cursor=pointer]:
+                  - /url: "#help"
+        - generic [ref=e290]:
+          - paragraph [ref=e291]: © 2025 Work & Invest. All rights reserved
+          - paragraph [ref=e292]: Made with ❤️ in Tunisia
+```

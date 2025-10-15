@@ -1,0 +1,2 @@
+import{j as i,bi as n}from"./vendor-react-DTfwnz2i.js";import{c as e}from"./badge-Bk34XC_J.js";function p({className:t,orientation:a="horizontal",decorative:o=!0,...r}){return i.jsx(n,{"data-slot":"separator-root",decorative:o,orientation:a,className:e("bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",t),...r})}export{p as S};
+//# sourceMappingURL=separator-Bu3GtbjQ.js.map

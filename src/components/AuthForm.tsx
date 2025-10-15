@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, startTransition } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -9,7 +9,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Progress } from './ui/progress';
 import { Alert, AlertDescription } from './ui/alert';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, Mail, ShieldCheck, HelpCircle, LogIn, UserPlus, Check, X, AlertCircle, Database, Trash2, ArrowLeft } from 'lucide-react';
 import { useI18n } from '../utils/i18n';
 
@@ -50,12 +50,15 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
       const { authApi } = await import('../utils/api');
       const response = await authApi.signIn(loginData.email, loginData.password);
       
-      if (response.success) {
+        if (response.success) {
         toast.success(t('auth.loginSuccess'));
-        onSuccess({
-          userId: response.user.id,
-          name: response.user.name,
-          email: response.user.email
+        // Use startTransition so any rendering that may suspend is treated as non-urgent
+        startTransition(() => {
+          onSuccess({
+            userId: response.user.id,
+            name: response.user.name,
+            email: response.user.email
+          });
         });
       } else {
         // Handle unsuccessful login even if no error was thrown
@@ -113,13 +116,16 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
         registerData.name
       );
       
-      if (response.success) {
+        if (response.success) {
         toast.success(t('auth.registrationSuccess'));
-        onSuccess({
-          userId: response.user.id,
-          name: response.user.name,
-          email: response.user.email
-        }, true); // true indicates this is a new user
+        // Use startTransition for the same reason as login
+        startTransition(() => {
+          onSuccess({
+            userId: response.user.id,
+            name: response.user.name,
+            email: response.user.email
+          }, true); // true indicates this is a new user
+        });
       } else {
         // Handle unsuccessful registration even if no error was thrown
         toast.error(response.error || t('auth.registrationFailed'));
@@ -138,14 +144,14 @@ export function AuthForm({ onSuccess, onBack, defaultTab = 'login' }: AuthFormPr
           toast.error(errorMessage, {
             duration: 5000,
             position: 'top-center',
-            action: {
+                action: {
               label: t('auth.signIn'), // Translated
               onClick: () => {
-                // Switch to login tab
-                const loginTab = document.querySelector('[value="login"]') as HTMLButtonElement;
-                if (loginTab) loginTab.click();
-                // Pre-fill email in login form
-                setLoginData({ ...loginData, email: registerData.email });
+                // Switch to login tab and pre-fill email using React state instead of a DOM click
+                startTransition(() => {
+                  setActiveTab('login');
+                  setLoginData({ ...loginData, email: registerData.email });
+                });
               }
             }
           });

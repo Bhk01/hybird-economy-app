@@ -53,6 +53,18 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+              if (id.includes('lucide-react') || id.includes('sonner')) return 'vendor-ui';
+              return 'vendor';
+            }
+          }
+        }
+      }
     },
     server: {
       port: 3000,

@@ -1,15 +1,16 @@
-import React, { useState, createContext, useContext, useEffect } from 'react';
-import { LandingPage } from './components/LandingPage';
-import { AuthForm } from './components/AuthForm';
-import { ProfileOnboarding } from './components/ProfileOnboarding';
-import { Dashboard } from './components/Dashboard';
-import { HireMode } from './components/HireMode';
-import { SkillSwapMode } from './components/SkillSwapMode';
-import { InvestmentMode } from './components/InvestmentMode';
-import { Profile } from './components/Profile';
-import { WalletSimple as Wallet } from './components/WalletSimple';
-import { Settings } from './components/Settings';
-import { PublicProfile } from './components/PublicProfile'; // Import new component
+import React, { useState, createContext, useContext, useEffect, Suspense, startTransition } from 'react';
+// Lazy-load larger route components to improve initial bundle size
+const LandingPage = React.lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
+const AuthForm = React.lazy(() => import('./components/AuthForm').then(m => ({ default: m.AuthForm })));
+const ProfileOnboarding = React.lazy(() => import('./components/ProfileOnboarding').then(m => ({ default: m.ProfileOnboarding })));
+const Dashboard = React.lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const HireMode = React.lazy(() => import('./components/HireMode').then(m => ({ default: m.HireMode })));
+const SkillSwapMode = React.lazy(() => import('./components/SkillSwapMode').then(m => ({ default: m.SkillSwapMode })));
+const InvestmentMode = React.lazy(() => import('./components/InvestmentMode').then(m => ({ default: m.InvestmentMode })));
+const Profile = React.lazy(() => import('./components/Profile').then(m => ({ default: m.Profile })));
+const Wallet = React.lazy(() => import('./components/WalletSimple').then(m => ({ default: m.WalletSimple })));
+const Settings = React.lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
+const PublicProfile = React.lazy(() => import('./components/PublicProfile').then(m => ({ default: m.PublicProfile })));
 import { Toaster } from './components/ui/sonner';
 import { UserProfile, Wallet as WalletType, userApi, walletApi, mockBackend, authApi } from './utils/api'; // Import mockBackend and authApi
 import { I18nProvider } from './utils/i18n';
@@ -67,8 +68,11 @@ export default function App() {
   const handleAuthSuccess = async (userData: { userId: string; name: string; email: string }, isNewUser: boolean = false) => {
     // If new user, show onboarding
     if (isNewUser) {
-      setNewUserData(userData);
-      setShowOnboarding(true);
+      // Schedule onboarding navigation as a transition so lazy loading can suspend without breaking input
+      startTransition(() => {
+        setNewUserData(userData);
+        setShowOnboarding(true);
+      });
       return;
     }
     
@@ -82,7 +86,7 @@ export default function App() {
       } catch (getError) {
         // Profile not found for existing user, attempt to create default profile
         const createResponse = await userApi.createProfile({
-          userId: userData.userId,
+          id: userData.userId,
           name: userData.name,
           email: userData.email,
           bio: 'Welcome to Work & Invest!',
@@ -102,10 +106,13 @@ export default function App() {
       const walletResponse = await walletApi.getWallet(userData.userId);
       const walletData = walletResponse.wallet;
       
-      setUser(userProfile);
-      setWallet(walletData);
-      setIsLoggedIn(true);
-      setCurrentPage('dashboard');
+      // Batch these UI updates as a transition to allow lazy-loaded dashboard/profile to suspend
+      startTransition(() => {
+        setUser(userProfile);
+        setWallet(walletData);
+        setIsLoggedIn(true);
+        setCurrentPage('dashboard');
+      });
       
     } catch (error) {
       console.error('Error loading user data after auth success:', error);
@@ -128,10 +135,12 @@ export default function App() {
       
       const fallbackWallet: WalletType = { money: 50, credits: 100, equity: 0 };
       
-      setUser(fallbackProfile);
-      setWallet(fallbackWallet);
-      setIsLoggedIn(true);
-      setCurrentPage('dashboard');
+      startTransition(() => {
+        setUser(fallbackProfile);
+        setWallet(fallbackWallet);
+        setIsLoggedIn(true);
+        setCurrentPage('dashboard');
+      });
     }
   };
 

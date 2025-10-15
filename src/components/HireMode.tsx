@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   Search,
   MapPin,
@@ -278,7 +278,7 @@ export function HireMode({ onNavigate }: HireModeProps) {
           </Dialog>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+  <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as any)}>
           <TabsList>
             <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
             <TabsTrigger value="my-jobs">My Jobs</TabsTrigger>

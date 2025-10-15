@@ -1,5 +1,5 @@
 {
-    "name": "Hybrid Economy App",
+    "name": "hybrid-economy-app",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -35,7 +35,7 @@
         "@radix-ui/react-toggle-group": "^1.1.2",
         "@radix-ui/react-tooltip": "^1.1.8",
         "class-variance-authority": "^0.7.1",
-        "clsx": "*",
+        "clsx": "^1.2.1",
         "cmdk": "^1.1.1",
         "embla-carousel-react": "^8.6.0",
         "hono": "*",
@@ -48,17 +48,30 @@
         "react-hook-form": "^7.55.0",
         "react-resizable-panels": "^2.1.7",
         "recharts": "^2.15.2",
-        "sonner": "^2.0.3",
-        "tailwind-merge": "*",
+        "sonner": "^2.0.7",
+        "tailwind-merge": "^1.14.0",
         "vaul": "^1.1.2"
     },
     "devDependencies": {
+        "@jest/globals": "^30.2.0",
+        "@playwright/test": "^1.40.0",
+        "@testing-library/jest-dom": "^6.0.0",
+        "@testing-library/react": "^14.0.0",
         "@types/node": "^20.10.0",
+        "@types/react": "^19.2.2",
+        "@types/react-dom": "^19.2.2",
         "@vitejs/plugin-react-swc": "^3.10.2",
-        "vite": "6.3.5"
+        "jsdom": "^22.1.0",
+        "source-map": "0.7.6",
+        "typescript": "5.4.2",
+        "vite": "6.3.5",
+        "vitest": "^3.2.4"
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "preview": "vite preview --port 5173",
+        "test": "vitest",
+        "test:e2e": "playwright test"
     }
 }

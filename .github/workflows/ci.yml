@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Build
+      run: npm run build
+    - name: Run tests
+      run: npm test
+
+    # Playwright E2E tests
+    # Note: Playwright requires installing browsers on the CI runner.
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Start preview server (for E2E)
+      run: |
+        nohup npm run preview -- --port 5173 > /tmp/vite-preview.log 2>&1 &
+        echo $! > /tmp/preview.pid
+    - name: Wait for preview to be ready
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sSf http://localhost:5173/ > /dev/null; then
+            echo "Preview ready"
+            exit 0
+          fi
+          echo "Waiting for preview... ($i)"
+          sleep 1
+        done
+        echo "Preview did not become ready in time"
+        cat /tmp/vite-preview.log || true
+        exit 1
+    - name: Run E2E tests
+      run: npm run test:e2e -- --reporter=list

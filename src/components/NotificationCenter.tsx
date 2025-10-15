@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../utils/i18n';
 import { useUser } from '../App';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { notificationsApi, Notification as ApiNotification } from '../utils/api';
 
 interface LocalNotification {

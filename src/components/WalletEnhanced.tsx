@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { walletApi, Transaction } from '../utils/api';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useI18n } from '../utils/i18n';
 
 interface PaymentMethod {
@@ -493,7 +493,7 @@ export function WalletEnhanced({ onNavigate }: WalletProps) {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+  <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as any)}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>

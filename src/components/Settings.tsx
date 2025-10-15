@@ -24,7 +24,7 @@ import {
 import { useI18n, Language } from '../utils/i18n';
 import { useTheme, Theme } from '../utils/theme';
 import { PageType } from '../App';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface SettingsProps {
   onNavigate: (page: PageType) => void;

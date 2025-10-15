@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Progress } from './ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   User,
   Star,
@@ -38,6 +38,7 @@ import {
   GraduationCap,
   DollarSign
 } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import { PageType, useUser } from '../App';
 import { useI18n } from '../utils/i18n';
 import { userApi, Certification, Service, JobExperience, StudyExperience, Review } from '../utils/api';
@@ -59,6 +60,8 @@ export function Profile({ onNavigate }: ProfileProps) {
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [showAddProject, setShowAddProject] = useState(false);
+  const [newProject, setNewProject] = useState({ title: '', link: '', tags: '', description: '', media: '' });
   
   // Editable form state
   const [editedData, setEditedData] = useState({
@@ -75,6 +78,7 @@ export function Profile({ onNavigate }: ProfileProps) {
     certifications: [] as Certification[],
     servicesOffered: [] as Service[],
     reviews: [] as Review[], // Added reviews to editedData
+    portfolio: [] as any[]
   });
   
   const [originalData, setOriginalData] = useState({ ...editedData });
@@ -95,7 +99,8 @@ export function Profile({ onNavigate }: ProfileProps) {
         studyExperiences: user.studyExperiences || [],
         certifications: user.certifications || [],
         servicesOffered: user.servicesOffered || [],
-        reviews: user.reviews || [] // Initialize reviews
+        reviews: user.reviews || [], // Initialize reviews
+        portfolio: user.portfolio || []
       };
       setEditedData(initialData);
       setOriginalData(initialData);
@@ -182,9 +187,26 @@ export function Profile({ onNavigate }: ProfileProps) {
         certifications: editedData.certifications,
         servicesOffered: editedData.servicesOffered,
         reviews: editedData.reviews // Save reviews
+        ,
+        portfolio: editedData.portfolio // persist portfolio when saving
       });
       setUser(updatedProfile.profile); // Update user context
-      setOriginalData({ ...editedData });
+      setOriginalData({
+        name: updatedProfile.profile.name || '',
+  username: updatedProfile.profile.email ? updatedProfile.profile.email.split('@')[0] : '',
+        bio: updatedProfile.profile.bio || '',
+        email: updatedProfile.profile.email || '',
+        phone: (updatedProfile.profile as any).phone || '',
+        location: updatedProfile.profile.location || '',
+        avatar: updatedProfile.profile.avatar || '',
+        skills: updatedProfile.profile.skills || [],
+        jobExperiences: updatedProfile.profile.jobExperiences || [],
+        studyExperiences: updatedProfile.profile.studyExperiences || [],
+        certifications: updatedProfile.profile.certifications || [],
+        servicesOffered: updatedProfile.profile.servicesOffered || [],
+        reviews: updatedProfile.profile.reviews || [],
+        portfolio: updatedProfile.profile.portfolio || []
+      });
       setHasUnsavedChanges(false);
       setIsEditing(false);
       toast.success(t('profile.saveChangesSuccess'));
@@ -239,74 +261,179 @@ export function Profile({ onNavigate }: ProfileProps) {
   const [currentSkillInput, setCurrentSkillInput] = useState('');
   const handleAddSkill = () => {
     if (currentSkillInput.trim() && !editedData.skills.includes(currentSkillInput.trim())) {
-      setEditedData(prev => ({ ...prev, skills: [...prev.skills, currentSkillInput.trim()] }));
+      setEditedData((prev: typeof editedData) => ({ ...prev, skills: [...prev.skills, currentSkillInput.trim()] }));
       setCurrentSkillInput('');
     }
   };
   const handleRemoveSkill = (skillToRemove: string) => {
-    setEditedData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }));
+    setEditedData((prev: typeof editedData) => ({ ...prev, skills: prev.skills.filter((s: string) => s !== skillToRemove) }));
   };
 
   // Add/Remove Job Experience
   const [newJobExp, setNewJobExp] = useState<Omit<JobExperience, 'id'>>({ title: '', company: '', startDate: '', endDate: null, description: '' });
   const handleAddJobExperience = () => {
     if (newJobExp.title && newJobExp.company && newJobExp.startDate) {
-      setEditedData(prev => ({ ...prev, jobExperiences: [...prev.jobExperiences, { ...newJobExp, id: generateId() }] }));
+      setEditedData((prev: typeof editedData) => ({ ...prev, jobExperiences: [...prev.jobExperiences, { ...newJobExp, id: generateId() }] }));
       setNewJobExp({ title: '', company: '', startDate: '', endDate: null, description: '' });
     } else {
       toast.error(t('onboarding.jobExperienceRequiredFields'));
     }
   };
   const handleRemoveJobExperience = (id: string) => {
-    setEditedData(prev => ({ ...prev, jobExperiences: prev.jobExperiences.filter(exp => exp.id !== id) }));
+    setEditedData((prev: typeof editedData) => ({ ...prev, jobExperiences: prev.jobExperiences.filter((exp: JobExperience) => exp.id !== id) }));
   };
 
   // Add/Remove Study Experience
   const [newStudyExp, setNewStudyExp] = useState<Omit<StudyExperience, 'id'>>({ degree: '', institution: '', startDate: '', endDate: null, description: '' });
   const handleAddStudyExperience = () => {
     if (newStudyExp.degree && newStudyExp.institution && newStudyExp.startDate) {
-      setEditedData(prev => ({ ...prev, studyExperiences: [...prev.studyExperiences, { ...newStudyExp, id: generateId() }] }));
+      setEditedData((prev: typeof editedData) => ({ ...prev, studyExperiences: [...prev.studyExperiences, { ...newStudyExp, id: generateId() }] }));
       setNewStudyExp({ degree: '', institution: '', startDate: '', endDate: null, description: '' });
     } else {
       toast.error(t('onboarding.studyExperienceRequiredFields'));
     }
   };
   const handleRemoveStudyExperience = (id: string) => {
-    setEditedData(prev => ({ ...prev, studyExperiences: prev.studyExperiences.filter(exp => exp.id !== id) }));
+    setEditedData((prev: typeof editedData) => ({ ...prev, studyExperiences: prev.studyExperiences.filter((exp: StudyExperience) => exp.id !== id) }));
   };
 
   // Add/Remove Certification
   const [newCert, setNewCert] = useState<Omit<Certification, 'id'>>({ name: '', issuer: '', date: '' });
   const handleAddCertification = () => {
     if (newCert.name && newCert.issuer && newCert.date) {
-      setEditedData(prev => ({ ...prev, certifications: [...prev.certifications, { ...newCert, id: generateId() }] }));
+      setEditedData((prev: typeof editedData) => ({ ...prev, certifications: [...prev.certifications, { ...newCert, id: generateId() }] }));
       setNewCert({ name: '', issuer: '', date: '' });
     } else {
       toast.error(t('profile.certificationRequiredFields'));
     }
   };
   const handleRemoveCertification = (id: string) => {
-    setEditedData(prev => ({ ...prev, certifications: prev.certifications.filter(cert => cert.id !== id) }));
+    setEditedData((prev: typeof editedData) => ({ ...prev, certifications: prev.certifications.filter((cert: Certification) => cert.id !== id) }));
   };
 
   // Add/Remove Service
   const [newService, setNewService] = useState<Omit<Service, 'id'>>({ name: '', price: '', rating: 0 });
   const handleAddService = () => {
     if (newService.name && newService.price) {
-      setEditedData(prev => ({ ...prev, servicesOffered: [...prev.servicesOffered, { ...newService, id: generateId() }] }));
+      setEditedData((prev: typeof editedData) => ({ ...prev, servicesOffered: [...prev.servicesOffered, { ...newService, id: generateId() }] }));
       setNewService({ name: '', price: '', rating: 0 });
     } else {
       toast.error(t('profile.serviceRequiredFields'));
     }
   };
   const handleRemoveService = (id: string) => {
-    setEditedData(prev => ({ ...prev, servicesOffered: prev.servicesOffered.filter(service => service.id !== id) }));
+    setEditedData((prev: typeof editedData) => ({ ...prev, servicesOffered: prev.servicesOffered.filter((service: Service) => service.id !== id) }));
   };
 
   // Helper to generate unique IDs (mocked for frontend)
   function generateId() {
     return Math.random().toString(36).substr(2, 9);
   }
+
+  // Portfolio: add new project (single consolidated handler)
+  const handleAddProject = async () => {
+    if (!newProject.title.trim()) {
+      toast.error('Please provide a project title');
+      return;
+    }
+    const project = {
+      id: generateId(),
+      title: newProject.title,
+      description: newProject.description,
+      tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      link: newProject.link || undefined,
+      media: newProject.media || null,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      const updatedPortfolio = [...(user?.portfolio || []), project];
+      const response = await userApi.updateProfile(user!.id, { portfolio: updatedPortfolio });
+      if (response && response.profile) {
+        setUser(response.profile);
+        // also keep local editedData in sync
+        setEditedData(prev => ({ ...prev, portfolio: response.profile.portfolio || updatedPortfolio }));
+        setShowAddProject(false);
+        setNewProject({ title: '', link: '', tags: '', description: '', media: '' });
+        toast.success('Project added to portfolio');
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (err: any) {
+      console.error('Failed to add project:', err);
+      toast.error('Failed to add project');
+    }
+  };
+
+  // Clear/Reset flow with confirmation and backend call
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const handleResetProfile = () => setShowResetConfirm(true);
+  const confirmResetProfile = async () => {
+    setShowResetConfirm(false);
+    if (!user) return;
+    try {
+      const res = await userApi.resetProfile(user.id);
+      if (res && res.profile) {
+        setUser(res.profile);
+        setEditedData({
+          name: res.profile.name || '',
+          username: res.profile.username || '',
+          bio: res.profile.bio || '',
+          email: res.profile.email || '',
+          phone: res.profile.phone || '',
+          location: res.profile.location || '',
+          avatar: res.profile.avatar || '',
+          skills: res.profile.skills || [],
+          jobExperiences: res.profile.jobExperiences || [],
+          studyExperiences: res.profile.studyExperiences || [],
+          certifications: res.profile.certifications || [],
+          servicesOffered: res.profile.servicesOffered || [],
+          reviews: res.profile.reviews || [],
+          portfolio: res.profile.portfolio || []
+        });
+        setOriginalData({ ...editedData });
+        toast.success('Profile reset successful');
+      } else {
+        toast.error('Failed to reset profile');
+      }
+    } catch (err) {
+      console.error('Reset profile failed', err);
+      toast.error('Failed to reset profile');
+    }
+  };
+
+  // Project delete confirmation
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const confirmDeleteProject = async () => {
+    if (!user || !projectToDelete) return;
+    try {
+      const updated = (user?.portfolio || []).filter((pp: any) => pp.id !== projectToDelete);
+      const resp = await userApi.updateProfile(user!.id, { portfolio: updated });
+      if (resp && resp.profile) {
+        setUser(resp.profile);
+        setEditedData(prev => ({ ...prev, portfolio: resp.profile.portfolio || updated }));
+        toast.success('Project removed');
+      } else {
+        throw new Error('Failed to remove project');
+      }
+    } catch (err) {
+      console.error('Failed to remove project', err);
+      toast.error('Failed to remove project');
+    } finally {
+      setShowDeleteConfirm(false);
+      setProjectToDelete(null);
+    }
+  };
+
+  // Add a dedicated flow for new users to configure their profile
+  useEffect(() => {
+    if (user && !user.bio && !user.skills?.length) {
+      setIsEditing(true);
+      toast.info('Please complete your profile setup.');
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -679,7 +806,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle>My Portfolio</CardTitle>
-                      <Button size="sm" variant="outline" className="gap-2">
+                      <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowAddProject(true)}>
                         <Plus className="h-4 w-4" />
                         Add Project
                       </Button>
@@ -690,58 +817,76 @@ export function Profile({ onNavigate }: ProfileProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
-                      {/* Placeholder for portfolio items */}
-                      <Card className="overflow-hidden">
-                        <div className="aspect-video bg-muted flex items-center justify-center">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
+                      {user?.portfolio && user.portfolio.length > 0 ? (
+                        user.portfolio.map((p) => (
+                          <Card key={p.id} className="overflow-hidden">
+                            <div className="aspect-video bg-muted flex items-center justify-center">
+                              {p.media ? <img src={p.media} alt={p.title} className="object-cover w-full h-full" /> : <FileText className="h-8 w-8 text-muted-foreground" />}
+                            </div>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="text-sm">{p.title}</h4>
+                                <div className="flex gap-2">
+                                    {p.link && (
+                                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" asChild>
+                                        <a href={p.link} target="_blank" rel="noreferrer"><ExternalLink className="h-3 w-3" /></a>
+                                      </Button>
+                                    )}
+                                    {isEditing && (
+                                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                                        setProjectToDelete(p.id);
+                                        setShowDeleteConfirm(true);
+                                      }}>
+                                        <Trash className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    )}
+                                </div>
+                              </div>
+                              {p.tags && p.tags.length > 0 && (
+                                <div className="mb-2">
+                                  {p.tags.map((tag) => (
+                                    <Badge key={tag} variant="outline" className="text-xs mr-1">{tag}</Badge>
+                                  ))}
+                                </div>
+                              )}
+                              <p className="text-xs text-muted-foreground mb-3">
+                                {p.description}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground col-span-2">
+                          <FileText className="h-12 w-12 mx-auto mb-4" />
+                          <p>{t('profile.noPortfolio')}</p>
+                          <p className="text-sm mt-2">{t('profile.noPortfolioDesc')}</p>
                         </div>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="text-sm">E-commerce Platform</h4>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <Badge variant="outline" className="text-xs mb-2">
-                            Web Development
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Full-stack e-commerce solution with React and Node.js
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            <Badge variant="secondary" className="text-xs">React</Badge>
-                            <Badge variant="secondary" className="text-xs">Node.js</Badge>
-                            <Badge variant="secondary" className="text-xs">MongoDB</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="overflow-hidden">
-                        <div className="aspect-video bg-muted flex items-center justify-center">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="text-sm">Mobile Banking App Design</h4>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <Badge variant="outline" className="text-xs mb-2">
-                            UI/UX Design
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Complete mobile app design for a fintech startup
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            <Badge variant="secondary" className="text-xs">Figma</Badge>
-                            <Badge variant="secondary" className="text-xs">Prototyping</Badge>
-                            <Badge variant="secondary" className="text-xs">User Research</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Add Project Modal/Form */}
+                {showAddProject && (
+                  <Card className="p-4">
+                    <CardHeader>
+                      <CardTitle>Add Portfolio Project</CardTitle>
+                      <CardDescription>Describe your project and add a link or media.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <Input placeholder="Project title" value={newProject.title} onChange={(e) => setNewProject({...newProject, title: e.target.value})} />
+                        <Input placeholder="Link (optional)" value={newProject.link} onChange={(e) => setNewProject({...newProject, link: e.target.value})} />
+                        <Input placeholder="Tags (comma separated)" value={newProject.tags} onChange={(e) => setNewProject({...newProject, tags: e.target.value})} />
+                        <Textarea placeholder="Short description" value={newProject.description} onChange={(e) => setNewProject({...newProject, description: e.target.value})} rows={4} />
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" onClick={() => setShowAddProject(false)}>Cancel</Button>
+                          <Button onClick={handleAddProject}>Add Project</Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               <TabsContent value="reviews" className="space-y-6">
@@ -896,6 +1041,13 @@ export function Profile({ onNavigate }: ProfileProps) {
                         </div>
                       </div>
                     </div>
+
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm mb-4">Profile Actions</h4>
+                      <Button size="sm" variant="destructive" onClick={handleResetProfile}>
+                        Clear/Reset Profile
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -923,6 +1075,33 @@ export function Profile({ onNavigate }: ProfileProps) {
             <AlertDialogAction onClick={pendingTab ? confirmTabChange : confirmCancelEditing}>
               Discard Changes
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Delete Project Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to remove this project from your portfolio? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowDeleteConfirm(false); setProjectToDelete(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProject}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Profile Confirmation */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Profile</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently remove your profile data and related items. You can re-create your profile later, but associated jobs, offers, and transactions will be deleted.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowResetConfirm(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmResetProfile}>Reset Profile</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
